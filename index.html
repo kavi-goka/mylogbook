@@ -595,15 +595,19 @@ function getPhoto(reg,type){var key=reg+'|'+type;if(key in photoCache)return Pro
 
 function renderAcCards(){
   var sorted=[].concat(flights).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-  var seen={},types=[];sorted.forEach(function(f){if(f.type&&!seen[f.type]){seen[f.type]=true;types.push(f.type);}});
-  var el=document.getElementById('ac-scroll');if(!types.length){el.innerHTML='';return;}
-  el.innerHTML=types.map(function(t){
-    var tf=sorted.filter(function(f){return f.type===t;});
-    var last=tf[0],l=tf.reduce(function(s,f){return s+ldgs(f);},0),reg=last&&last.reg||'',daysAgo=last?Math.round((new Date()-new Date(last.date))/864e5):'-';
-    var key=reg+'|'+t,cached=photoCache[key],pid='ph_'+key.replace(/[^a-z0-9]/gi,'_');
+  var seen={}, types=[];
+  sorted.forEach(function(f){if(f.type&&f.reg&&!seen[f.type+'|'+f.reg]){seen[f.type+'|'+f.reg]=true;types.push({type:f.type,reg:f.reg});}});
+  var el=document.getElementById('ac-scroll');
+  if(!types.length){el.innerHTML='';return;}
+  el.innerHTML=types.map(function(item){
+    var t=item.type, reg=item.reg;
+    var tf=sorted.filter(function(f){return f.type===t&&f.reg===reg;});
+    var last=tf[0], l=tf.reduce(function(s,f){return s+ldgs(f);},0);
+    var daysAgo=last?Math.round((new Date()-new Date(last.date))/864e5):'-';
+    var key=reg+'|'+t, cached=photoCache[key], pid='ph_'+key.replace(/[^a-z0-9]/gi,'_');
     var imgHtml=cached?'<img class="ac-thumb" src="'+cached+'">':(key in photoCache?'<div class="ac-placeholder"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>':'<div class="ac-placeholder ac-loading" id="'+pid+'"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>');
     if(!(key in photoCache)){(function(r,tp,id){getPhoto(r,tp).then(function(url){var e2=document.getElementById(id);if(!e2)return;if(url){var img=document.createElement('img');img.className='ac-thumb';img.src=url;e2.replaceWith(img);}else{e2.classList.remove('ac-loading');}});})(reg,t,pid);}
-    return'<div class="ac-card">'+imgHtml+'<div class="ac-info"><div class="ac-reg">'+(reg||t)+'</div><div class="ac-type">'+t+'</div><div class="ac-row"><span>'+fmt(sumF(tf,'block'))+'</span><span>'+l+' ldgs</span></div><div class="ac-row" style="margin-top:2px"><span style="color:var(--text3)">'+(last?last.from+'\u2192'+last.to:'')+'</span><span style="color:var(--text3)">'+daysAgo+'d</span></div></div></div>';
+    return'<div class="ac-card">'+imgHtml+'<div class="ac-info"><div class="ac-reg">'+reg+'</div><div class="ac-type">'+t+'</div><div class="ac-row"><span>'+fmt(sumF(tf,'block'))+'</span><span>'+l+' ldgs</span></div><div class="ac-row" style="margin-top:2px"><span style="color:var(--text3)">'+(last?last.from+'\u2192'+last.to:'')+'</span><span style="color:var(--text3)">'+daysAgo+'d</span></div></div></div>';
   }).join('');
 }
 
