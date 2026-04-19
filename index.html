@@ -340,12 +340,12 @@ tr:hover td{background:var(--surface2)}
       <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:flex-end;gap:8px;margin-bottom:12px">
         <div class="form-group">
           <label>Departure</label>
-          <input type="text" id="f-from" placeholder="EGLL" maxlength="4" style="font-size:18px;font-weight:600;text-transform:uppercase">
+          <input type="text" id="f-from" placeholder="EGLL" maxlength="4" style="font-size:18px;font-weight:600;text-transform:uppercase" oninput="calcBlockTime()">
         </div>
-        <div style="color:var(--accent);font-size:20px;padding-bottom:8px;text-align:center">&#9992;</div>
-        <div class="form-group">
+        <div style="color:var(--accent);font-size:20px;padding-bottom:8px;text-align:center;flex-shrink:0">&#9992;</div>
+        <div class="form-group" style="min-width:0">
           <label style="text-align:right;display:block">Arrival</label>
-          <input type="text" id="f-to" placeholder="LFPG" maxlength="4" style="font-size:18px;font-weight:600;text-transform:uppercase;text-align:right">
+          <input type="text" id="f-to" placeholder="LFPG" maxlength="4" style="font-size:18px;font-weight:600;text-transform:uppercase;text-align:right;width:100%" oninput="calcBlockTime()">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:10px">
@@ -776,30 +776,148 @@ function getReg(){
 }
 
 function calcBlockTime(){
-  var off=document.getElementById('f-blockoff').value;
-  var on=document.getElementById('f-blockon').value;
-  var disp=document.getElementById('block-display');
-  var nh=document.getElementById('f-nighthrs');
-  if(!off||!on){disp.textContent='0:00';return;}
-  var offMs=new Date(off).getTime();
-  var onMs=new Date(on).getTime();
-  if(onMs<=offMs){disp.textContent='--:--';return;}
-  var diffH=(onMs-offMs)/3600000;
-  var t=Math.round(diffH*60);
-  disp.textContent=Math.floor(t/60)+':'+(t%60).toString().padStart(2,'0');
-  var nightH=estimateNight(new Date(off),new Date(on));
-  nh.value=nightH.toFixed(2);
+  var off = document.getElementById('f-blockoff').value;
+  var on = document.getElementById('f-blockon').value;
+  var disp = document.getElementById('block-display');
+  var nh = document.getElementById('f-nighthrs');
+  if(!off || !on){disp.textContent='0:00';return;}
+  var offMs = new Date(off).getTime();
+  var onMs = new Date(on).getTime();
+  if(onMs <= offMs){disp.textContent='--:--';return;}
+  var diffH = (onMs - offMs) / 3600000;
+  var t = Math.round(diffH * 60);
+  disp.textContent = Math.floor(t/60) + ':' + (t%60).toString().padStart(2,'0');
+  var fromIcao = (document.getElementById('f-from').value || '').toUpperCase().trim();
+  var toIcao   = (document.getElementById('f-to').value   || '').toUpperCase().trim();
+
+  // Night hours
+  var nightH = estimateNight(new Date(off), new Date(on), fromIcao, toIcao);
+  nh.value = nightH.toFixed(2);
+
+  // Auto landing day/night based on block-on time at arrival airport
+  var arrCoords = AIRPORT_COORDS[toIcao] || AIRPORT_COORDS[fromIcao] || null;
+  if(arrCoords){
+    var landingMs = onMs;
+    var ss = getSunriseSunsetUTC(new Date(landingMs), arrCoords.lat, arrCoords.lon);
+    var isNightLanding;
+    if(ss.polarNight){ isNightLanding = true; }
+    else if(ss.polarDay){ isNightLanding = false; }
+    else { isNightLanding = (landingMs < ss.sunrise.getTime() || landingMs > ss.sunset.getTime()); }
+
+    if(isNightLanding){
+      document.getElementById('f-ldd').value = 0; document.getElementById('f-ldd-d').textContent = 0;
+      document.getElementById('f-ldn').value = 1; document.getElementById('f-ldn-d').textContent = 1;
+    } else {
+      document.getElementById('f-ldd').value = 1; document.getElementById('f-ldd-d').textContent = 1;
+      document.getElementById('f-ldn').value = 0; document.getElementById('f-ldn-d').textContent = 0;
+    }
+  }
+
+  // Auto takeoff day/night based on block-off time at departure airport
+  var depCoords = AIRPORT_COORDS[fromIcao] || null;
+  if(depCoords){
+    var takeoffMs = offMs;
+    var ss2 = getSunriseSunsetUTC(new Date(takeoffMs), depCoords.lat, depCoords.lon);
+    var isNightTakeoff;
+    if(ss2.polarNight){ isNightTakeoff = true; }
+    else if(ss2.polarDay){ isNightTakeoff = false; }
+    else { isNightTakeoff = (takeoffMs < ss2.sunrise.getTime() || takeoffMs > ss2.sunset.getTime()); }
+
+    if(isNightTakeoff){
+      document.getElementById('f-tod').value = 0; document.getElementById('f-tod-d').textContent = 0;
+      document.getElementById('f-ton').value = 1; document.getElementById('f-ton-d').textContent = 1;
+    } else {
+      document.getElementById('f-tod').value = 1; document.getElementById('f-tod-d').textContent = 1;
+      document.getElementById('f-ton').value = 0; document.getElementById('f-ton-d').textContent = 0;
+    }
+  }
 }
 
-function estimateNight(start,end){
-  var total=(end-start)/3600000;
-  if(total<=0)return 0;
-  var nightH=0,step=300000;
-  for(var t=start.getTime();t<end.getTime();t+=step){
-    var h=new Date(t).getUTCHours();
-    if(h<6||h>=20)nightH+=step/3600000;
+function getSunriseSunsetUTC(date, lat, lon) {
+  var rad = Math.PI / 180;
+  var deg = 180 / Math.PI;
+  var dayOfYear = Math.floor((date - new Date(date.getFullYear(),0,0)) / 86400000);
+  var B = (360/365) * (dayOfYear - 81) * rad;
+  var decl = Math.asin(Math.sin(23.45*rad) * Math.sin(B));
+  // EASA civil twilight: sun centre 6 degrees below horizon = 96 degrees zenith
+  var zenith = 96 * rad;
+  var cosH = (Math.cos(zenith) - Math.sin(lat*rad)*Math.sin(decl)) / (Math.cos(lat*rad)*Math.cos(decl));
+  if(cosH > 1) return {sunrise:null, sunset:null, polarNight:true};
+  if(cosH < -1) return {sunrise:null, sunset:null, polarNight:false, polarDay:true};
+  var H = Math.acos(cosH) * deg;
+  var EoT = 9.87*Math.sin(2*B) - 7.53*Math.cos(B) - 1.5*Math.sin(B);
+  var solarNoon = 12 - lon/15 - EoT/60;
+  var sunriseUTC = solarNoon - H/15;
+  var sunsetUTC  = solarNoon + H/15;
+  var d = new Date(date);
+  d.setUTCHours(0,0,0,0);
+  return {
+    sunrise: new Date(d.getTime() + sunriseUTC*3600000),
+    sunset:  new Date(d.getTime() + sunsetUTC*3600000),
+    polarNight: false, polarDay: false
+  };
+}
+
+var AIRPORT_COORDS = {
+  EGLL:{lat:51.47,lon:-0.46},EGCC:{lat:53.35,lon:-2.27},EGKK:{lat:51.15,lon:-0.19},EGGD:{lat:51.38,lon:-2.72},
+  EDDV:{lat:52.46,lon:9.69},EDDB:{lat:52.36,lon:13.50},EDDH:{lat:53.63,lon:10.00},
+  EDDK:{lat:50.87,lon:7.14},EDDL:{lat:51.28,lon:6.77},EDDS:{lat:48.69,lon:9.22},
+  EDDF:{lat:50.03,lon:8.57},EDDP:{lat:51.43,lon:12.22},EDDN:{lat:49.49,lon:11.08},
+  EDDB:{lat:52.36,lon:13.50},EDBM:{lat:52.08,lon:11.73},EDKB:{lat:50.77,lon:7.16},
+  ESSA:{lat:59.65,lon:17.92},ESGG:{lat:57.66,lon:12.29},ESKN:{lat:58.79,lon:17.57},
+  ENGM:{lat:60.19,lon:11.10},ENZV:{lat:58.88,lon:5.64},ENVA:{lat:63.46,lon:10.92},
+  EKCH:{lat:55.62,lon:12.66},EKBI:{lat:55.74,lon:9.15},
+  EFHK:{lat:60.32,lon:24.96},EFTU:{lat:60.51,lon:22.26},
+  LEMG:{lat:36.67,lon:-4.50},LEMD:{lat:40.47,lon:-3.56},LEPA:{lat:39.55,lon:2.74},
+  LEAL:{lat:38.28,lon:-0.56},LEBL:{lat:41.30,lon:2.08},LEBB:{lat:43.30,lon:-2.91},
+  GCFV:{lat:28.45,lon:-13.86},GCLP:{lat:27.93,lon:-15.39},GCXO:{lat:28.04,lon:-16.57},GCTS:{lat:28.04,lon:-16.57},
+  LFPG:{lat:49.00,lon:2.55},LFPO:{lat:48.72,lon:2.36},LFLL:{lat:45.72,lon:5.08},LFMN:{lat:43.66,lon:7.21},
+  LIRF:{lat:41.80,lon:12.25},LIML:{lat:45.45,lon:9.28},LIPZ:{lat:45.50,lon:12.35},LIRN:{lat:40.89,lon:14.29},
+  LGAV:{lat:37.94,lon:23.94},LGTS:{lat:40.52,lon:22.97},
+  EHAM:{lat:52.31,lon:4.76},EHRD:{lat:51.96,lon:4.44},
+  EBCI:{lat:50.46,lon:4.45},EBBR:{lat:50.90,lon:4.48},
+  LPPT:{lat:38.77,lon:-9.13},LPFR:{lat:37.01,lon:-7.97},LPPR:{lat:41.24,lon:-8.68},
+  LOWW:{lat:48.11,lon:16.57},LOWS:{lat:47.79,lon:13.00},LOWI:{lat:47.26,lon:11.34},
+  LKPR:{lat:50.10,lon:14.26},LZIB:{lat:48.17,lon:17.21},LHBP:{lat:47.43,lon:19.26},
+  EPWA:{lat:52.17,lon:20.97},EPKK:{lat:50.08,lon:19.79},EPGD:{lat:54.38,lon:18.47},
+  LDZA:{lat:45.74,lon:16.07},LJLJ:{lat:46.22,lon:14.46},LYBE:{lat:44.82,lon:20.29},
+  LROP:{lat:44.57,lon:26.10},LBSF:{lat:42.70,lon:23.41},LWSK:{lat:41.96,lon:21.62},
+  GMME:{lat:33.36,lon:-7.58},GMMN:{lat:33.36,lon:-7.58},DTTA:{lat:36.85,lon:10.23},HECA:{lat:30.12,lon:31.41},
+  RJTT:{lat:35.55,lon:139.78},RJAA:{lat:35.77,lon:140.39},
+  OERK:{lat:24.96,lon:46.70},OMDB:{lat:25.25,lon:55.36},OMAA:{lat:24.43,lon:54.65},
+  OTHH:{lat:25.27,lon:51.61},OKBK:{lat:29.23,lon:47.97},
+  KJFK:{lat:40.64,lon:-73.78},KLAX:{lat:33.94,lon:-118.41},KORD:{lat:41.98,lon:-87.90},
+  YSSY:{lat:-33.94,lon:151.18},YMML:{lat:-37.67,lon:144.84},
+  EIDW:{lat:53.42,lon:-6.27},EICK:{lat:51.84,lon:-8.49}
+};
+
+function estimateNight(start, end, fromIcao, toIcao) {
+  var total = (end - start) / 3600000;
+  if(total <= 0) return 0;
+  var fromC = AIRPORT_COORDS[fromIcao] || null;
+  var toC   = AIRPORT_COORDS[toIcao]   || null;
+  if(!fromC && !toC) return 0; // unknown airports — don't guess
+  var nightH = 0, step = 60000; // 1-minute resolution
+  var totalSteps = Math.ceil((end - start) / step);
+  for(var i = 0; i < totalSteps; i++) {
+    var tMs = start.getTime() + i * step;
+    var progress = totalSteps > 1 ? i / (totalSteps - 1) : 0;
+    var lat, lon;
+    if(fromC && toC){
+      lat = fromC.lat + (toC.lat - fromC.lat) * progress;
+      lon = fromC.lon + (toC.lon - fromC.lon) * progress;
+    } else {
+      lat = (fromC || toC).lat;
+      lon = (fromC || toC).lon;
+    }
+    var ss = getSunriseSunsetUTC(new Date(tMs), lat, lon);
+    var isNight;
+    if(ss.polarNight){ isNight = true; }
+    else if(ss.polarDay){ isNight = false; }
+    else { isNight = (tMs < ss.sunrise.getTime() || tMs > ss.sunset.getTime()); }
+    if(isNight) nightH += step / 3600000;
   }
-  return Math.min(nightH,total);
+  return Math.min(nightH, total);
 }
 
 function adj(id,delta){
@@ -999,6 +1117,9 @@ function handleImport(e){
           var blockRaw=hm2d(c[idx('duration_block')]);
           var simRaw=hm2d(c[idx('duration_simulator')]);
           blockStartVal=c[idx('time_block_start')]?c[idx('time_block_start')].trim():'';
+          var blockEndVal=c[idx('time_block_end')]?c[idx('time_block_end')].trim():'';
+          var blockoff=date&&blockStartVal?date+'T'+blockStartVal:'';
+          var blockon=date&&blockEndVal?date+'T'+blockEndVal:'';
           bDec=blockRaw>0?blockRaw:0;
           simHrsVal=simRaw>0?simRaw:0;
           pic=hm2d(c[idx('duration_pic')]);picus=hm2d(c[idx('duration_picus')]);sic=hm2d(c[idx('duration_sic')]);
@@ -1031,7 +1152,7 @@ function handleImport(e){
         if(blockStartVal){isDupe=flights.some(function(f){return f.date===date&&f.reg===reg&&f.blockStart===blockStartVal;});}
         else{isDupe=flights.some(function(f){return f.date===date&&f.reg===reg&&f.from===from&&f.to===to&&Math.abs(parseFloat(f.block)-bDec)<0.02;});}
         if(isDupe){dupes++;return;}
-        flights.push({id:Date.now().toString()+Math.random(),date:date,type:type,reg:reg,from:from,to:to,blockStart:blockStartVal,block:bDec.toFixed(2),simHrs:simHrsVal.toFixed(2),pic:pic.toFixed(2),picus:picus.toFixed(2),sic:sic.toFixed(2),dayHrs:dayHrs.toFixed(2),nightHrs:nightHrs.toFixed(2),ifrHrs:ifrHrs.toFixed(2),dayLdg:dayLdg,nightLdg:nightLdg,remarks:remarks});
+        flights.push({id:Date.now().toString()+Math.random(),date:date,type:type,reg:reg,from:from,to:to,blockStart:blockStartVal,blockoff:blockoff,blockon:blockon,block:bDec.toFixed(2),simHrs:simHrsVal.toFixed(2),pic:pic.toFixed(2),picus:picus.toFixed(2),sic:sic.toFixed(2),dayHrs:dayHrs.toFixed(2),nightHrs:nightHrs.toFixed(2),ifrHrs:ifrHrs.toFixed(2),dayLdg:dayLdg,nightLdg:nightLdg,remarks:remarks});
         added++;
       } catch(err){invalid++;reasons.push('Error: '+err.message);}
     });
