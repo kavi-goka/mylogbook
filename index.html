@@ -2,12 +2,15 @@
 <html lang="en" data-theme="dark" data-color="purple">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>myLogbook</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f0f0e">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="myLogbook">
+<link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{--accent:#a855f7;--accent-dark:#9333ea;--accent-light:rgba(168,85,247,.15);--bg:#0f0f0e;--surface:#1a1a18;--surface2:#242422;--surface3:#2e2e2b;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.15);--text:#f0f0ec;--text2:#aaa;--text3:#666;--green:#22c55e;--amber:#f59e0b;--red:#ef4444}
@@ -17,9 +20,34 @@
 [data-color="coral"]{--accent:#fb7185;--accent-dark:#f43f5e;--accent-light:rgba(251,113,133,.15)}
 [data-color="amber"]{--accent:#fbbf24;--accent-dark:#f59e0b;--accent-light:rgba(251,191,36,.15)}
 [data-theme="light"]{--bg:#f0f0ee;--surface:#fff;--surface2:#f5f5f3;--surface3:#ebebea;--border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.15);--text:#1a1a18;--text2:#666;--text3:#aaa}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:13px}
-.sidebar{width:190px;min-height:100vh;background:var(--surface);border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;font-size:13px;overflow-x:hidden}
+
+/* TOPBAR */
+.topbar{height:54px;background:var(--surface);border-bottom:0.5px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:17px;font-weight:600;flex:1}
+.btn-add{background:var(--accent);color:#fff;font-weight:500;padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:none;font-family:inherit;white-space:nowrap}
+.menu-btn{width:36px;height:36px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.menu-btn svg{width:18px;height:18px;fill:var(--text2)}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:220px;background:var(--surface);border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:transform .25s ease;overflow-y:auto}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px}
+
+/* MOBILE SIDEBAR OVERLAY */
+@media(max-width:680px){
+  .sidebar{position:fixed;top:54px;left:0;bottom:0;z-index:40;transform:translateX(-100%);width:240px}
+  .sidebar.open{transform:translateX(0);box-shadow:4px 0 20px rgba(0,0,0,.5)}
+  .overlay{display:none;position:fixed;inset:0;top:54px;background:rgba(0,0,0,.5);z-index:39}
+  .overlay.open{display:block}
+  .content{padding:12px}
+}
+@media(min-width:681px){
+  .menu-btn{display:none}
+}
+
+/* NAV */
 .logo{padding:16px 16px 12px;display:flex;align-items:center;gap:9px;border-bottom:0.5px solid var(--border)}
 .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo-icon svg{width:17px;height:17px;fill:#fff}
@@ -27,220 +55,247 @@ body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min
 .logo-sub{font-size:10px;color:var(--text3);margin-top:1px}
 .nav-section{padding:10px 0 4px}
 .nav-label{padding:4px 16px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-weight:500}
-nav a{display:flex;align-items:center;gap:9px;padding:7px 16px;font-size:12.5px;color:var(--text2);cursor:pointer;border-left:2px solid transparent;text-decoration:none}
+nav a{display:flex;align-items:center;gap:9px;padding:9px 16px;font-size:13px;color:var(--text2);cursor:pointer;border-left:2px solid transparent;text-decoration:none}
 nav a:hover{background:var(--surface2);color:var(--text)}
 nav a.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-light);font-weight:500}
-nav a svg{width:14px;height:14px;flex-shrink:0}
+nav a svg{width:15px;height:15px;flex-shrink:0}
 .sidebar-bottom{margin-top:auto;padding:12px 16px;border-top:0.5px solid var(--border)}
 .slabel{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .theme-toggle{display:flex;gap:4px;margin-bottom:10px}
-.theme-btn{flex:1;padding:4px 0;font-size:11px;border:0.5px solid var(--border2);border-radius:5px;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit}
+.theme-btn{flex:1;padding:5px 0;font-size:11px;border:0.5px solid var(--border2);border-radius:5px;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit}
 .theme-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.swatches{display:flex;gap:5px}
-.swatch{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent}
-.swatch:hover{transform:scale(1.2)}
+.swatches{display:flex;gap:6px}
+.swatch{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent}
 .swatch.active{border-color:var(--text)}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.topbar{height:52px;background:var(--surface);border-bottom:0.5px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
-.topbar h1{font-size:18px;font-weight:600;flex:1}
-.topbar-btn{padding:6px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;border:none}
-.btn-add{background:var(--accent);color:#fff;font-weight:500}
-.btn-add:hover{opacity:.85}
-.content{flex:1;overflow-y:auto;padding:18px 20px}
+
+/* PAGES */
 .page{display:none}
 .page.active{display:block}
-.ov-stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:0.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
-.ov-stat{padding:16px 20px;border-right:0.5px solid var(--border)}
-.ov-stat:last-child{border-right:none}
-.ov-stat .s-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;font-weight:500}
-.ov-stat .s-val{font-size:28px;font-weight:300;letter-spacing:-1px;margin-bottom:6px}
+
+/* STATS */
+.ov-stats{display:grid;grid-template-columns:repeat(2,1fr);background:var(--surface);border:0.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+@media(min-width:500px){.ov-stats{grid-template-columns:repeat(4,1fr)}}
+.ov-stat{padding:14px 16px;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border)}
+.ov-stat:nth-child(2n){border-right:none}
+@media(min-width:500px){.ov-stat:nth-child(2n){border-right:0.5px solid var(--border)}.ov-stat:last-child{border-right:none}.ov-stat{border-bottom:none}}
+.ov-stat .s-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;font-weight:500}
+.ov-stat .s-val{font-size:24px;font-weight:300;letter-spacing:-1px;margin-bottom:4px}
 .ov-stat .s-sub{font-size:11px;color:var(--text3)}
-.ov-row{display:grid;grid-template-columns:1fr 380px;gap:14px;margin-bottom:14px}
-.card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px}
+
+/* CARDS */
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:12px}
 .card-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;font-weight:500}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .card-header .card-title{margin-bottom:0}
-.details-link{font-size:11px;color:var(--accent);cursor:pointer}
 .chart-wrap{position:relative;height:160px}
-.chart-wrap-lg{position:relative;height:200px}
+.chart-wrap-lg{position:relative;height:180px}
+
+/* RECENCY */
 .recency-list,.limits-list{display:flex;flex-direction:column;gap:8px}
 .recency-item{display:flex;align-items:center;gap:8px}
 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot.green{background:var(--green)}
-.dot.amber{background:var(--amber)}
-.dot.red{background:var(--red)}
+.dot.green{background:var(--green)}.dot.amber{background:var(--amber)}.dot.red{background:var(--red)}
 .rec-label{flex:1;font-size:11px;color:var(--text)}
-.rec-bar-wrap{width:120px;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.rec-bar-wrap{width:90px;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
 .rec-bar{height:100%;border-radius:3px}
-.rec-right{font-size:10px;color:var(--text3);min-width:80px;text-align:right}
+.rec-right{font-size:10px;color:var(--text3);min-width:60px;text-align:right}
 .limit-item .l-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
-.limit-item .l-label{color:var(--text2)}
-.limit-item .l-val{color:var(--text3)}
+.limit-item .l-label{color:var(--text2)}.limit-item .l-val{color:var(--text3)}
 .limit-bar-wrap{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
 .limit-bar{height:100%;border-radius:2px}
-.aircraft-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}
+
+/* AIRCRAFT SCROLL */
+.aircraft-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch}
 .aircraft-scroll::-webkit-scrollbar{height:3px}
 .aircraft-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.ac-card{flex-shrink:0;width:185px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;overflow:hidden}
-.ac-card:hover{border-color:var(--border2)}
-.ac-thumb{width:100%;height:95px;object-fit:cover;display:block}
-.ac-placeholder{width:100%;height:95px;background:var(--surface2);display:flex;align-items:center;justify-content:center}
-.ac-placeholder svg{width:32px;height:32px;opacity:.18;fill:var(--text)}
-.ac-info{padding:8px 10px}
-.ac-reg{font-size:12px;font-weight:600}
-.ac-type{font-size:10px;color:var(--text3);margin-bottom:4px}
+.ac-card{flex-shrink:0;width:160px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;overflow:hidden}
+.ac-thumb{width:100%;height:85px;object-fit:cover;display:block}
+.ac-placeholder{width:100%;height:85px;background:var(--surface2);display:flex;align-items:center;justify-content:center}
+.ac-placeholder svg{width:28px;height:28px;opacity:.18;fill:var(--text)}
+.ac-info{padding:7px 9px}
+.ac-reg{font-size:11px;font-weight:600}
+.ac-type{font-size:10px;color:var(--text3);margin-bottom:3px}
 .ac-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text2)}
 @keyframes shimmer{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
 .ac-loading{animation:shimmer 1.5s infinite}
-.totals-table{width:100%;border-collapse:collapse;font-size:11.5px}
-.totals-table th{text-align:right;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);padding:6px 8px;border-bottom:0.5px solid var(--border)}
-.totals-table th:first-child{text-align:left;padding-left:14px}
+
+/* TOTALS TABLE */
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.totals-table{width:100%;border-collapse:collapse;font-size:11px;min-width:500px}
+.totals-table th{text-align:right;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);padding:6px 8px;border-bottom:0.5px solid var(--border);white-space:nowrap}
+.totals-table th:first-child{text-align:left;padding-left:12px}
 .totals-table td{padding:7px 8px;border-bottom:0.5px solid var(--border);text-align:right;color:var(--text2)}
-.totals-table td:first-child{text-align:left;padding-left:14px;font-weight:500;color:var(--text)}
+.totals-table td:first-child{text-align:left;padding-left:12px;font-weight:500;color:var(--text)}
 .totals-table tr:last-child td{border-bottom:none;font-weight:600;color:var(--text)}
 .totals-table tr:hover td{background:var(--surface2)}
-.time-filter{display:flex;gap:4px;margin-bottom:18px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:4px;width:fit-content}
-.tf-btn{padding:5px 14px;font-size:12px;border-radius:5px;cursor:pointer;border:none;background:transparent;color:var(--text2);font-family:inherit}
-.tf-btn:hover{background:var(--surface2);color:var(--text)}
+
+/* TIME FILTER */
+.time-filter{display:flex;gap:3px;margin-bottom:16px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:3px;width:fit-content;overflow-x:auto;max-width:100%}
+.tf-btn{padding:5px 11px;font-size:12px;border-radius:5px;cursor:pointer;border:none;background:transparent;color:var(--text2);font-family:inherit;white-space:nowrap}
 .tf-btn.active{background:var(--accent);color:#fff;font-weight:500}
-.an-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+
+/* ANALYTICS GRID */
+.an-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px}
+@media(min-width:600px){.an-grid{grid-template-columns:1fr 1fr}}
 .an-grid.full{grid-template-columns:1fr}
 .hbar-list{display:flex;flex-direction:column;gap:6px}
 .hbar-row{display:flex;align-items:center;gap:8px}
-.hbar-label{font-size:11px;color:var(--text2);min-width:70px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar-label{font-size:11px;color:var(--text2);min-width:60px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hbar-track{flex:1;height:22px;background:var(--surface2);border-radius:3px;position:relative;overflow:hidden}
 .hbar-fill{position:absolute;left:0;top:0;bottom:0;background:var(--surface3);border-radius:3px;min-width:2px}
-.hbar-val{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text);font-weight:500;white-space:nowrap}
-.donut-wrap{position:relative;height:180px}
+.hbar-val{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text);font-weight:500;white-space:nowrap}
+.donut-wrap{position:relative;height:160px}
 .donut-legend{display:flex;flex-direction:column;gap:5px;margin-top:8px}
 .donut-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
 .donut-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-.toolbar input,.toolbar select{font-size:12px;padding:5px 10px;border:0.5px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);height:30px}
-.btn{padding:5px 12px;border:0.5px solid var(--border2);border-radius:6px;background:transparent;color:var(--text);font-size:12px;cursor:pointer;height:30px;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.toolbar input,.toolbar select{font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:7px;background:var(--surface);color:var(--text);height:36px;flex:1;min-width:120px}
+.btn{padding:7px 14px;border:0.5px solid var(--border2);border-radius:7px;background:transparent;color:var(--text);font-size:13px;cursor:pointer;height:36px;display:inline-flex;align-items:center;gap:5px;font-family:inherit;white-space:nowrap}
 .btn:hover{background:var(--surface2)}
 .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.btn.primary:hover{opacity:.85}
 .btn.danger{color:var(--red);border-color:var(--red)}
-.btn.danger:hover{background:rgba(239,68,68,.12)}
+
+/* LOG TABLE */
 .log-wrap{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;overflow:hidden}
-table{width:100%;border-collapse:collapse}
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:700px}
 th{text-align:left;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);padding:8px 10px;border-bottom:0.5px solid var(--border);white-space:nowrap}
-td{padding:8px 10px;border-bottom:0.5px solid var(--border);font-size:12px;white-space:nowrap}
+td{padding:9px 10px;border-bottom:0.5px solid var(--border);font-size:12px;white-space:nowrap}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--surface2)}
 .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;background:var(--accent-light);color:var(--accent)}
 .empty{text-align:center;padding:2.5rem;color:var(--text3);font-size:13px}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:flex-end;justify-content:center}
+@media(min-width:600px){.modal-bg{align-items:center}}
 .modal-bg.open{display:flex}
-.modal{background:var(--surface);border-radius:14px;padding:20px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;border:0.5px solid var(--border2)}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;border:0.5px solid var(--border2)}
+@media(min-width:600px){.modal{border-radius:14px;width:560px;max-width:95vw}}
 .modal h2{font-size:15px;font-weight:600;margin-bottom:16px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .form-grid .full{grid-column:1/-1}
-.form-group{display:flex;flex-direction:column;gap:3px}
+.form-group{display:flex;flex-direction:column;gap:4px}
 .form-group label{font-size:11px;color:var(--text3)}
-.form-group input,.form-group textarea{font-size:12px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-family:inherit}
+.form-group input,.form-group textarea{font-size:14px;padding:9px 10px;border:0.5px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);font-family:inherit}
 .form-group textarea{resize:vertical;min-height:55px}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+
+/* IMPORT/EXPORT */
 .ie-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
 .ie-card h3{font-size:13px;font-weight:500;margin-bottom:6px}
-.ie-card p{font-size:12px;color:var(--text2);margin-bottom:12px}
-.danger-card{border-color:var(--red)}
-.danger-card h3{color:var(--red)}
-.import-area{border:1.5px dashed var(--border2);border-radius:8px;padding:1.5rem;text-align:center;color:var(--text2);font-size:12px;cursor:pointer}
+.ie-card p{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5}
+.danger-card{border-color:var(--red)}.danger-card h3{color:var(--red)}
+.import-area{border:1.5px dashed var(--border2);border-radius:8px;padding:1.5rem;text-align:center;color:var(--text2);font-size:13px;cursor:pointer;line-height:1.6}
 .import-area:hover{background:var(--surface2)}
 #fileInput{display:none}
 .tab-bar{display:flex;gap:2px;margin-bottom:14px}
-.tab{padding:6px 14px;font-size:12px;cursor:pointer;border-radius:6px;color:var(--text2)}
+.tab{padding:7px 16px;font-size:13px;cursor:pointer;border-radius:7px;color:var(--text2)}
 .tab.active{background:var(--accent-light);color:var(--accent);font-weight:500}
-.section-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.section-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;margin-top:4px}
+
+/* INSTALL BANNER */
+#install-banner{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:0.5px solid var(--border2);padding:14px 16px;z-index:60;align-items:center;gap:12px}
+#install-banner.show{display:flex}
+#install-banner p{flex:1;font-size:13px;color:var(--text)}
+#install-banner p span{display:block;font-size:11px;color:var(--text3);margin-top:2px}
 </style>
 </head>
 <body>
-<div class="sidebar">
-  <div class="logo">
-    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>
-    <div><div class="logo-name">myLogbook</div><div class="logo-sub">For Pilots</div></div>
+
+<div class="topbar">
+  <div class="menu-btn" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
   </div>
-  <nav>
-    <div class="nav-section">
-      <div class="nav-label">Logbook</div>
-      <a class="active" onclick="showPage('overview',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Overview</a>
-      <a onclick="showPage('logbook',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>Flights</a>
-      <a onclick="showPage('totals',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>Totals</a>
-    </div>
-    <div class="nav-section">
-      <div class="nav-label">Analytics</div>
-      <a onclick="showPage('analytics',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>Overview</a>
-    </div>
-    <div class="nav-section">
-      <div class="nav-label">Data</div>
-      <a onclick="showPage('importexport',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>Import / Export</a>
-    </div>
-  </nav>
-  <div class="sidebar-bottom">
-    <div class="slabel">Theme</div>
-    <div class="theme-toggle">
-      <button class="theme-btn" id="btn-light" onclick="setTheme('light')">Light</button>
-      <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')">Dark</button>
-    </div>
-    <div class="slabel">Accent</div>
-    <div class="swatches">
-      <div class="swatch" data-color="blue" style="background:#60a5fa" onclick="setColor('blue')"></div>
-      <div class="swatch active" data-color="purple" style="background:#a855f7" onclick="setColor('purple')"></div>
-      <div class="swatch" data-color="teal" style="background:#2dd4bf" onclick="setColor('teal')"></div>
-      <div class="swatch" data-color="coral" style="background:#fb7185" onclick="setColor('coral')"></div>
-      <div class="swatch" data-color="amber" style="background:#fbbf24" onclick="setColor('amber')"></div>
-    </div>
-  </div>
+  <h1 id="page-title">Overview</h1>
+  <button class="btn-add" onclick="openModal()">+ Add</button>
 </div>
 
-<div class="main">
-  <div class="topbar">
-    <h1 id="page-title">Overview</h1>
-    <button class="topbar-btn btn-add" onclick="openModal()">+ Add flight</button>
+<div class="app-body">
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>
+      <div><div class="logo-name">myLogbook</div><div class="logo-sub">For Pilots</div></div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Logbook</div>
+        <a class="active" onclick="showPage('overview',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Overview</a>
+        <a onclick="showPage('logbook',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>Flights</a>
+        <a onclick="showPage('totals',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>Totals</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Analytics</div>
+        <a onclick="showPage('analytics',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>Overview</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Data</div>
+        <a onclick="showPage('importexport',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>Import / Export</a>
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="slabel">Theme</div>
+      <div class="theme-toggle">
+        <button class="theme-btn" id="btn-light" onclick="setTheme('light')">Light</button>
+        <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')">Dark</button>
+      </div>
+      <div class="slabel">Accent</div>
+      <div class="swatches">
+        <div class="swatch" data-color="blue" style="background:#60a5fa" onclick="setColor('blue')"></div>
+        <div class="swatch active" data-color="purple" style="background:#a855f7" onclick="setColor('purple')"></div>
+        <div class="swatch" data-color="teal" style="background:#2dd4bf" onclick="setColor('teal')"></div>
+        <div class="swatch" data-color="coral" style="background:#fb7185" onclick="setColor('coral')"></div>
+        <div class="swatch" data-color="amber" style="background:#fbbf24" onclick="setColor('amber')"></div>
+      </div>
+    </div>
   </div>
+
   <div class="content">
 
     <!-- OVERVIEW -->
     <div id="page-overview" class="page active">
       <div class="ov-stats" id="ov-stats"></div>
-      <div class="ov-row">
-        <div class="card">
-          <div class="card-title">Flight hours per month</div>
-          <div class="chart-wrap"><canvas id="chartMonthly" role="img" aria-label="Monthly hours"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Recency &amp; currency</div>
-          <div class="recency-list" id="recency-list"></div>
-          <div style="margin-top:14px">
-            <div class="card-title">Hour limits</div>
-            <div class="limits-list" id="limits-list"></div>
-          </div>
+      <div class="card">
+        <div class="card-title">Flight hours per month</div>
+        <div class="chart-wrap"><canvas id="chartMonthly" role="img" aria-label="Monthly hours"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recency &amp; currency</div>
+        <div class="recency-list" id="recency-list"></div>
+        <div style="margin-top:14px">
+          <div class="card-title">Hour limits</div>
+          <div class="limits-list" id="limits-list"></div>
         </div>
       </div>
       <div class="aircraft-scroll" id="ac-scroll"></div>
       <div class="card" style="padding:0;overflow:hidden">
-        <table class="totals-table">
-          <thead><tr><th>Aircraft type</th><th>Total time</th><th>#F/Ldgs</th><th>PIC</th><th>PICUS</th><th>SIC</th><th>Night</th><th>IFR</th><th>Last flight</th></tr></thead>
-          <tbody id="totals-body"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="totals-table">
+            <thead><tr><th>Type</th><th>Total</th><th>#F/Ldgs</th><th>PIC</th><th>SIC</th><th>Night</th><th>IFR</th><th>Last</th></tr></thead>
+            <tbody id="totals-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- FLIGHTS -->
     <div id="page-logbook" class="page">
       <div class="toolbar">
-        <input type="text" id="search" placeholder="Search flights..." style="width:190px" oninput="renderLogbook()">
+        <input type="text" id="search" placeholder="Search..." oninput="renderLogbook()">
         <select id="filterType" onchange="renderLogbook()"><option value="">All types</option></select>
-        <button class="btn primary" onclick="openModal()">+ Add flight</button>
+        <button class="btn primary" onclick="openModal()">+ Add</button>
       </div>
       <div class="log-wrap">
-        <table>
-          <thead><tr><th>Date</th><th>Type</th><th>Reg</th><th>From</th><th>To</th><th>Block</th><th>PIC</th><th>Night</th><th>IFR</th><th>Day ldg</th><th>Night ldg</th><th>Remarks</th><th></th></tr></thead>
-          <tbody id="logbook-body"></tbody>
-        </table>
-        <div id="logbook-empty" class="empty" style="display:none">No flights yet. Click "+ Add flight" to get started.</div>
+        <div class="log-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Type</th><th>Reg</th><th>From</th><th>To</th><th>Block</th><th>PIC</th><th>Night</th><th>IFR</th><th>Ldgs</th><th>Remarks</th><th></th></tr></thead>
+            <tbody id="logbook-body"></tbody>
+          </table>
+        </div>
+        <div id="logbook-empty" class="empty" style="display:none">No flights yet. Tap "+ Add" to get started.</div>
       </div>
       <div id="logbook-count" style="font-size:11px;color:var(--text3);margin-top:8px"></div>
     </div>
@@ -257,13 +312,15 @@ tr:hover td{background:var(--surface2)}
         <button class="tf-btn active" onclick="setTF(99999,this)">ALL</button>
       </div>
       <div class="section-label">Function</div>
-      <div id="totals-fn-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:24px"></div>
+      <div id="totals-fn-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px"></div>
       <div class="section-label">By aircraft type</div>
       <div class="card" style="padding:0;overflow:hidden">
-        <table class="totals-table">
-          <thead><tr><th>Aircraft type</th><th>Total time</th><th>#F/Ldgs</th><th>PIC</th><th>PICUS</th><th>SIC</th><th>Night hrs</th><th>IFR hrs</th><th>Sim hrs</th><th>Last flight</th></tr></thead>
-          <tbody id="totals-body2"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="totals-table">
+            <thead><tr><th>Type</th><th>Total</th><th>#F/Ldgs</th><th>PIC</th><th>PICUS</th><th>SIC</th><th>Night</th><th>IFR</th><th>Sim</th><th>Last</th></tr></thead>
+            <tbody id="totals-body2"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -278,39 +335,39 @@ tr:hover td{background:var(--surface2)}
         <button class="tf-btn active" onclick="setTF(99999,this)">ALL</button>
       </div>
       <div class="an-grid">
-        <div class="card"><div class="card-header"><div class="card-title">Type</div></div><div class="hbar-list" id="an-type"></div></div>
-        <div class="card"><div class="card-header"><div class="card-title">Landings</div></div><div class="hbar-list" id="an-landings"></div></div>
+        <div class="card"><div class="card-title">Type</div><div class="hbar-list" id="an-type"></div></div>
+        <div class="card"><div class="card-title">Landings</div><div class="hbar-list" id="an-landings"></div></div>
       </div>
       <div class="an-grid">
-        <div class="card"><div class="card-header"><div class="card-title">Registration</div></div><div class="hbar-list" id="an-reg"></div></div>
-        <div class="card"><div class="card-header"><div class="card-title">Visited airports</div></div><div class="hbar-list" id="an-airports"></div></div>
+        <div class="card"><div class="card-title">Registration</div><div class="hbar-list" id="an-reg"></div></div>
+        <div class="card"><div class="card-title">Visited airports</div><div class="hbar-list" id="an-airports"></div></div>
       </div>
       <div class="an-grid">
         <div class="card">
-          <div class="card-header"><div class="card-title">Engine</div></div>
-          <div style="display:flex;align-items:center;gap:20px">
+          <div class="card-title">Engine</div>
+          <div style="display:flex;align-items:center;gap:16px">
             <div class="donut-wrap" style="flex:1"><canvas id="chartEngine" role="img" aria-label="Engine"></canvas></div>
             <div class="donut-legend" id="engine-legend"></div>
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Role</div></div>
-          <div style="display:flex;align-items:center;gap:20px">
+          <div class="card-title">Role</div>
+          <div style="display:flex;align-items:center;gap:16px">
             <div class="donut-wrap" style="flex:1"><canvas id="chartRole" role="img" aria-label="Role"></canvas></div>
             <div class="donut-legend" id="role-legend"></div>
           </div>
         </div>
       </div>
       <div class="an-grid">
-        <div class="card"><div class="card-header"><div class="card-title">By month</div></div><div class="chart-wrap-lg"><canvas id="chartAnMonthly" role="img" aria-label="Monthly"></canvas></div></div>
-        <div class="card"><div class="card-header"><div class="card-title">Visited countries</div></div><div class="hbar-list" id="an-countries"></div></div>
+        <div class="card"><div class="card-title">By month</div><div class="chart-wrap-lg"><canvas id="chartAnMonthly" role="img" aria-label="Monthly"></canvas></div></div>
+        <div class="card"><div class="card-title">Visited countries</div><div class="hbar-list" id="an-countries"></div></div>
       </div>
       <div class="an-grid full">
-        <div class="card"><div class="card-header"><div class="card-title">Total hours (cumulative)</div></div><div class="chart-wrap-lg"><canvas id="chartCumulative" role="img" aria-label="Cumulative"></canvas></div></div>
+        <div class="card"><div class="card-title">Total hours (cumulative)</div><div class="chart-wrap-lg"><canvas id="chartCumulative" role="img" aria-label="Cumulative"></canvas></div></div>
       </div>
     </div>
 
-    <!-- IMPORT / EXPORT -->
+    <!-- IMPORT/EXPORT -->
     <div id="page-importexport" class="page">
       <div class="tab-bar">
         <div class="tab active" id="tab-btn-export" onclick="switchTab('export')">Export</div>
@@ -320,7 +377,7 @@ tr:hover td{background:var(--surface2)}
         <div class="ie-card">
           <h3>Export logbook</h3>
           <p>Download your complete flight log as CSV or a printable PDF.</p>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn primary" onclick="exportCSV()">Download CSV</button>
             <button class="btn" onclick="exportPrint()">Print / PDF</button>
           </div>
@@ -334,18 +391,24 @@ tr:hover td{background:var(--surface2)}
       <div id="tab-import" style="display:none">
         <div class="ie-card">
           <h3>Import from CSV</h3>
-          <p>Supports Flylog exports and myLogbook CSV format. Duplicates are skipped automatically.</p>
+          <p>Supports Flylog exports and myLogbook CSV format. Duplicates skipped automatically.</p>
           <div class="import-area" onclick="document.getElementById('fileInput').click()">
-            Click to select CSV file
-            <div style="font-size:10px;margin-top:3px;color:var(--text3)">or drag and drop</div>
+            Tap to select CSV file
           </div>
           <input type="file" id="fileInput" accept=".csv" onchange="handleImport(event)">
-          <div id="import-msg" style="font-size:12px;margin-top:8px"></div>
+          <div id="import-msg" style="font-size:12px;margin-top:8px;line-height:1.6"></div>
         </div>
       </div>
     </div>
 
   </div>
+</div>
+
+<!-- INSTALL BANNER -->
+<div id="install-banner">
+  <p>Install myLogbook<span>Add to home screen for the best experience</span></p>
+  <button class="btn primary" id="install-btn" style="height:auto;padding:8px 14px">Install</button>
+  <button class="btn" id="install-dismiss" style="height:auto;padding:8px 10px">✕</button>
 </div>
 
 <!-- MODAL -->
@@ -356,8 +419,8 @@ tr:hover td{background:var(--surface2)}
       <div class="form-group"><label>Date</label><input type="date" id="f-date"></div>
       <div class="form-group"><label>Aircraft type</label><input type="text" id="f-type" placeholder="e.g. A320"></div>
       <div class="form-group"><label>Registration</label><input type="text" id="f-reg" placeholder="e.g. 9H-EUL"></div>
-      <div class="form-group"><label>Departure (ICAO)</label><input type="text" id="f-from" placeholder="e.g. EGLL" maxlength="4"></div>
-      <div class="form-group"><label>Arrival (ICAO)</label><input type="text" id="f-to" placeholder="e.g. LFPG" maxlength="4"></div>
+      <div class="form-group"><label>Departure (ICAO)</label><input type="text" id="f-from" placeholder="EGLL" maxlength="4"></div>
+      <div class="form-group"><label>Arrival (ICAO)</label><input type="text" id="f-to" placeholder="LFPG" maxlength="4"></div>
       <div class="form-group"><label>Block time (hrs)</label><input type="number" id="f-block" step="0.1" min="0"></div>
       <div class="form-group"><label>PIC time (hrs)</label><input type="number" id="f-pic" step="0.1" min="0"></div>
       <div class="form-group"><label>PICUS time (hrs)</label><input type="number" id="f-picus" step="0.1" min="0"></div>
@@ -377,124 +440,142 @@ tr:hover td{background:var(--surface2)}
 </div>
 
 <script>
-var flights = [], editId = null, tfDays = 99999;
-var chartOvMonthly=null, chartAnMonthly=null, chartEngine=null, chartRole=null, chartCumulative=null;
-var photoCache = {};
-var SK = 'mylogbook-flights', PK = 'mylogbook-prefs';
+var flights=[],editId=null,tfDays=99999;
+var chartOvMonthly=null,chartAnMonthly=null,chartEngine=null,chartRole=null,chartCumulative=null;
+var photoCache={};
+var SK='mylogbook-flights',PK='mylogbook-prefs';
+var deferredPrompt=null;
 
-function loadFlights() {
-  try { var r = localStorage.getItem(SK); if (r) flights = JSON.parse(r); } catch(e) {}
-  try { var p = localStorage.getItem(PK); if (p) { var pr = JSON.parse(p); setTheme(pr.theme||'dark',true); setColor(pr.color||'purple',true); } } catch(e) {}
-  renderAll();
-}
-function persist() { try { localStorage.setItem(SK, JSON.stringify(flights)); } catch(e) {} }
-function savePrefs() { try { localStorage.setItem(PK, JSON.stringify({theme:document.documentElement.dataset.theme,color:document.documentElement.dataset.color})); } catch(e) {} }
-
-document.getElementById('delete-all-btn').addEventListener('click', function() {
-  if (!confirm('Delete ALL ' + flights.length + ' flights? This cannot be undone.')) return;
-  flights = [];
-  persist();
-  renderAll();
-  alert('All flights deleted.');
+// PWA install prompt
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById('install-banner').classList.add('show');
+});
+document.getElementById('install-btn').addEventListener('click',function(){
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function(){
+    deferredPrompt=null;
+    document.getElementById('install-banner').classList.remove('show');
+  });
+});
+document.getElementById('install-dismiss').addEventListener('click',function(){
+  document.getElementById('install-banner').classList.remove('show');
+});
+window.addEventListener('appinstalled',function(){
+  document.getElementById('install-banner').classList.remove('show');
 });
 
-function setTheme(t, silent) {
-  document.documentElement.dataset.theme = t;
-  document.getElementById('btn-light').classList.toggle('active', t==='light');
-  document.getElementById('btn-dark').classList.toggle('active', t==='dark');
-  if (!silent) { savePrefs(); renderOvChart(); renderAnalytics(); }
+// Service worker
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+// Storage
+function loadFlights(){
+  try{var r=localStorage.getItem(SK);if(r)flights=JSON.parse(r);}catch(e){}
+  try{var p=localStorage.getItem(PK);if(p){var pr=JSON.parse(p);setTheme(pr.theme||'dark',true);setColor(pr.color||'purple',true);}}catch(e){}
+  renderAll();
 }
-function setColor(c, silent) {
-  document.documentElement.dataset.color = c;
-  document.querySelectorAll('.swatch').forEach(function(s){ s.classList.toggle('active', s.dataset.color===c); });
-  if (!silent) { savePrefs(); renderOvChart(); renderAnalytics(); }
+function persist(){try{localStorage.setItem(SK,JSON.stringify(flights));}catch(e){}}
+function savePrefs(){try{localStorage.setItem(PK,JSON.stringify({theme:document.documentElement.dataset.theme,color:document.documentElement.dataset.color}));}catch(e){}}
+
+// Sidebar toggle (mobile)
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
 }
-function setTF(days, el) {
-  tfDays = days;
-  document.querySelectorAll('.tf-btn').forEach(function(b){ b.classList.remove('active'); });
-  el.classList.add('active');
-  renderAnalytics();
-  renderTotals();
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
 }
 
-var PT = {overview:'Overview',logbook:'Flights',totals:'Totals',analytics:'Analytics',importexport:'Import / Export'};
-function showPage(p, el) {
-  document.querySelectorAll('.page').forEach(function(x){ x.classList.remove('active'); });
-  document.querySelectorAll('nav a').forEach(function(x){ x.classList.remove('active'); });
+// Delete all
+document.getElementById('delete-all-btn').addEventListener('click',function(){
+  if(!confirm('Delete ALL '+flights.length+' flights? This cannot be undone.'))return;
+  flights=[];persist();renderAll();alert('All flights deleted.');
+});
+
+function setTheme(t,silent){
+  document.documentElement.dataset.theme=t;
+  document.getElementById('btn-light').classList.toggle('active',t==='light');
+  document.getElementById('btn-dark').classList.toggle('active',t==='dark');
+  if(!silent){savePrefs();renderOvChart();renderAnalytics();}
+}
+function setColor(c,silent){
+  document.documentElement.dataset.color=c;
+  document.querySelectorAll('.swatch').forEach(function(s){s.classList.toggle('active',s.dataset.color===c);});
+  if(!silent){savePrefs();renderOvChart();renderAnalytics();}
+}
+function setTF(days,el){
+  tfDays=days;
+  document.querySelectorAll('.tf-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderAnalytics();renderTotals();
+}
+
+var PT={overview:'Overview',logbook:'Flights',totals:'Totals',analytics:'Analytics',importexport:'Import / Export'};
+function showPage(p,el){
+  document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
+  document.querySelectorAll('nav a').forEach(function(x){x.classList.remove('active');});
   document.getElementById('page-'+p).classList.add('active');
-  if (el) el.classList.add('active');
-  document.getElementById('page-title').textContent = PT[p]||'';
+  if(el)el.classList.add('active');
+  document.getElementById('page-title').textContent=PT[p]||'';
+  closeSidebar();
   renderAll();
 }
 
-function fmt(h) { if (!h||isNaN(h)||h===0) return '0:00'; var t=Math.round(parseFloat(h)*60); return Math.floor(t/60)+':'+(t%60).toString().padStart(2,'0'); }
-function sumF(arr,k) { return arr.reduce(function(s,f){ return s+(parseFloat(f[k])||0); },0); }
-function ldgs(f) { return (parseInt(f.dayLdg)||0)+(parseInt(f.nightLdg)||0); }
-function getAccent() { var m={blue:'#60a5fa',teal:'#2dd4bf',purple:'#a855f7',coral:'#fb7185',amber:'#fbbf24'}; return m[document.documentElement.dataset.color]||'#a855f7'; }
-function tfF() { return tfDays>=99999?flights:flights.filter(function(f){ return (new Date()-new Date(f.date))/864e5<=tfDays; }); }
+function fmt(h){if(!h||isNaN(h)||parseFloat(h)===0)return'0:00';var t=Math.round(parseFloat(h)*60);return Math.floor(t/60)+':'+(t%60).toString().padStart(2,'0');}
+function sumF(arr,k){return arr.reduce(function(s,f){return s+(parseFloat(f[k])||0);},0);}
+function ldgs(f){return(parseInt(f.dayLdg)||0)+(parseInt(f.nightLdg)||0);}
+function getAccent(){var m={blue:'#60a5fa',teal:'#2dd4bf',purple:'#a855f7',coral:'#fb7185',amber:'#fbbf24'};return m[document.documentElement.dataset.color]||'#a855f7';}
+function tfF(){return tfDays>=99999?flights:flights.filter(function(f){return(new Date()-new Date(f.date))/864e5<=tfDays;});}
+function renderAll(){renderOvStats();renderRecency();renderTotals();renderLogbook();renderOvChart();renderAcCards();populateTypeFilter();renderAnalytics();}
 
-function renderAll() { renderOvStats(); renderRecency(); renderTotals(); renderLogbook(); renderOvChart(); renderAcCards(); populateTypeFilter(); renderAnalytics(); }
-
-function renderOvStats() {
+function renderOvStats(){
   var now=new Date();
-  var d28=flights.filter(function(f){ return (now-new Date(f.date))/864e5<=28; });
-  var d90=flights.filter(function(f){ return (now-new Date(f.date))/864e5<=90; });
-  var d12=flights.filter(function(f){ return (now-new Date(f.date))/864e5<=365; });
+  var d28=flights.filter(function(f){return(now-new Date(f.date))/864e5<=28;});
+  var d90=flights.filter(function(f){return(now-new Date(f.date))/864e5<=90;});
+  var d12=flights.filter(function(f){return(now-new Date(f.date))/864e5<=365;});
   document.getElementById('ov-stats').innerHTML=[
-    ['Total time', fmt(sumF(flights,'block')), flights.reduce(function(s,f){return s+ldgs(f);},0)+' landings'],
-    ['28 days',    fmt(sumF(d28,'block')),     d28.reduce(function(s,f){return s+ldgs(f);},0)+' ldgs'],
-    ['90 days',    fmt(sumF(d90,'block')),     d90.reduce(function(s,f){return s+ldgs(f);},0)+' ldgs'],
-    ['12 months',  fmt(sumF(d12,'block')),     d12.reduce(function(s,f){return s+ldgs(f);},0)+' ldgs']
-  ].map(function(x){ return '<div class="ov-stat"><div class="s-label">'+x[0]+'</div><div class="s-val">'+x[1]+'</div><div class="s-sub">'+x[2]+'</div></div>'; }).join('');
+    ['Total time',fmt(sumF(flights,'block')),flights.reduce(function(s,f){return s+ldgs(f);},0)+' ldgs'],
+    ['28 days',fmt(sumF(d28,'block')),d28.reduce(function(s,f){return s+ldgs(f);},0)+' ldgs'],
+    ['90 days',fmt(sumF(d90,'block')),d90.reduce(function(s,f){return s+ldgs(f);},0)+' ldgs'],
+    ['12 months',fmt(sumF(d12,'block')),d12.reduce(function(s,f){return s+ldgs(f);},0)+' ldgs']
+  ].map(function(x){return'<div class="ov-stat"><div class="s-label">'+x[0]+'</div><div class="s-val">'+x[1]+'</div><div class="s-sub">'+x[2]+'</div></div>';}).join('');
 }
 
-function renderRecency() {
+function renderRecency(){
   var now=new Date();
-  var d90=flights.filter(function(f){ return (now-new Date(f.date))/864e5<=90; });
-  var d28=flights.filter(function(f){ return (now-new Date(f.date))/864e5<=28; });
-  var d12=flights.filter(function(f){ return (now-new Date(f.date))/864e5<=365; });
-  var yr=flights.filter(function(f){ return new Date(f.date).getFullYear()===now.getFullYear(); });
-  function rec(label,val,req,unit){ var ok=val>=req,pct=Math.min(100,Math.round(val/req*100)),col=ok?'var(--green)':'var(--amber)'; return '<div class="recency-item"><div class="dot '+(ok?'green':'amber')+'"></div><div class="rec-label">'+label+'</div><div class="rec-bar-wrap"><div class="rec-bar" style="width:'+pct+'%;background:'+col+'"></div></div><div class="rec-right">'+val+' / '+req+' '+unit+'</div></div>'; }
-  function lim(label,val,max){ var pct=Math.min(100,Math.round(val/max*100)),col=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--accent)'; return '<div class="limit-item"><div class="l-top"><span class="l-label">'+label+' | '+fmt(val)+'</span><span class="l-val">max '+fmt(max)+'</span></div><div class="limit-bar-wrap"><div class="limit-bar" style="width:'+pct+'%;background:'+col+'"></div></div></div>'; }
+  var d90=flights.filter(function(f){return(now-new Date(f.date))/864e5<=90;});
+  var d28=flights.filter(function(f){return(now-new Date(f.date))/864e5<=28;});
+  var d12=flights.filter(function(f){return(now-new Date(f.date))/864e5<=365;});
+  var yr=flights.filter(function(f){return new Date(f.date).getFullYear()===now.getFullYear();});
+  function rec(label,val,req,unit){var ok=val>=req,pct=Math.min(100,Math.round(val/req*100)),col=ok?'var(--green)':'var(--amber)';return'<div class="recency-item"><div class="dot '+(ok?'green':'amber')+'"></div><div class="rec-label">'+label+'</div><div class="rec-bar-wrap"><div class="rec-bar" style="width:'+pct+'%;background:'+col+'"></div></div><div class="rec-right">'+val+'/'+req+' '+unit+'</div></div>';}
+  function lim(label,val,max){var pct=Math.min(100,Math.round(val/max*100)),col=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--accent)';return'<div class="limit-item"><div class="l-top"><span class="l-label">'+label+' | '+fmt(val)+'</span><span class="l-val">max '+fmt(max)+'</span></div><div class="limit-bar-wrap"><div class="limit-bar" style="width:'+pct+'%;background:'+col+'"></div></div></div>';}
   var dl90=d90.reduce(function(s,f){return s+(parseInt(f.dayLdg)||0);},0);
   var nl90=d90.reduce(function(s,f){return s+(parseInt(f.nightLdg)||0);},0);
-  document.getElementById('recency-list').innerHTML=rec('PAX recency (day ldg)',dl90,3,'ldg')+rec('Night currency',nl90,3,'ldg')+rec('90-day hours',Math.round(sumF(d90,'block')*10)/10,10,'hrs');
-  document.getElementById('limits-list').innerHTML=lim('Last 28 days',sumF(d28,'block'),100)+lim('Last 12 months',sumF(d12,'block'),1000)+lim('Cal. year '+now.getFullYear(),sumF(yr,'block'),900);
+  document.getElementById('recency-list').innerHTML=rec('PAX recency',dl90,3,'ldg')+rec('Night currency',nl90,3,'ldg')+rec('90-day hrs',Math.round(sumF(d90,'block')*10)/10,10,'hrs');
+  document.getElementById('limits-list').innerHTML=lim('28 days',sumF(d28,'block'),100)+lim('12 months',sumF(d12,'block'),1000)+lim('Cal. '+now.getFullYear(),sumF(yr,'block'),900);
 }
 
-function typeToWiki(t){ var map={A319:'Airbus_A319',A320:'Airbus_A320',A321:'Airbus_A321',A330:'Airbus_A330',A350:'Airbus_A350_XWB',A380:'Airbus_A380',B737:'Boeing_737',B738:'Boeing_737',B747:'Boeing_747',B777:'Boeing_777',B787:'Boeing_787_Dreamliner',C172:'Cessna_172',C152:'Cessna_152',DA42:'Diamond_DA42',PA28:'Piper_PA-28_Cherokee',AT72:'ATR_72',E190:'Embraer_190',A210:'Airbus_A220',BCS1:'Airbus_A220'}; var u=(t||'').toUpperCase().replace(/[-\s]/g,''); if(map[u])return map[u]; for(var k in map){if(u.indexOf(k)===0)return map[k];} return null; }
-function getPhoto(reg,type){
-  var key=reg+'|'+type;
-  if(key in photoCache) return Promise.resolve(photoCache[key]);
-  photoCache[key]=null;
-  var p1 = reg ? fetch('https://api.planespotters.net/pub/photos/reg/'+encodeURIComponent(reg)).then(function(r){return r.ok?r.json():null;}).then(function(d){return d&&d.photos&&d.photos[0]&&(d.photos[0].thumbnail_large&&d.photos[0].thumbnail_large.src||d.photos[0].thumbnail&&d.photos[0].thumbnail.src)||null;}).catch(function(){return null;}) : Promise.resolve(null);
-  return p1.then(function(url){
-    if(url){photoCache[key]=url;return url;}
-    var wiki=typeToWiki(type);
-    if(!wiki) return null;
-    return fetch('https://en.wikipedia.org/w/api.php?action=query&titles='+wiki+'&prop=pageimages&format=json&pithumbsize=400&origin=*').then(function(r){return r.ok?r.json():null;}).then(function(d){var pages=d&&d.query&&d.query.pages;var u=pages&&Object.values(pages)[0]&&Object.values(pages)[0].thumbnail&&Object.values(pages)[0].thumbnail.source;if(u)photoCache[key]=u;return u||null;}).catch(function(){return null;});
-  });
-}
+function typeToWiki(t){var map={A319:'Airbus_A319',A320:'Airbus_A320',A321:'Airbus_A321',A330:'Airbus_A330',A350:'Airbus_A350_XWB',A380:'Airbus_A380',B737:'Boeing_737',B738:'Boeing_737',B747:'Boeing_747',B777:'Boeing_777',B787:'Boeing_787_Dreamliner',C172:'Cessna_172',C152:'Cessna_152',DA42:'Diamond_DA42',PA28:'Piper_PA-28_Cherokee',AT72:'ATR_72',E190:'Embraer_190',A210:'Airbus_A220',BCS1:'Airbus_A220'};var u=(t||'').toUpperCase().replace(/[-\s]/g,'');if(map[u])return map[u];for(var k in map){if(u.indexOf(k)===0)return map[k];}return null;}
+function getPhoto(reg,type){var key=reg+'|'+type;if(key in photoCache)return Promise.resolve(photoCache[key]);photoCache[key]=null;var p1=reg?fetch('https://api.planespotters.net/pub/photos/reg/'+encodeURIComponent(reg)).then(function(r){return r.ok?r.json():null;}).then(function(d){return d&&d.photos&&d.photos[0]&&(d.photos[0].thumbnail_large&&d.photos[0].thumbnail_large.src||d.photos[0].thumbnail&&d.photos[0].thumbnail.src)||null;}).catch(function(){return null;}):Promise.resolve(null);return p1.then(function(url){if(url){photoCache[key]=url;return url;}var wiki=typeToWiki(type);if(!wiki)return null;return fetch('https://en.wikipedia.org/w/api.php?action=query&titles='+wiki+'&prop=pageimages&format=json&pithumbsize=400&origin=*').then(function(r){return r.ok?r.json():null;}).then(function(d){var pages=d&&d.query&&d.query.pages;var u=pages&&Object.values(pages)[0]&&Object.values(pages)[0].thumbnail&&Object.values(pages)[0].thumbnail.source;if(u)photoCache[key]=u;return u||null;}).catch(function(){return null;});});}
 
 function renderAcCards(){
   var sorted=[].concat(flights).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-  var seen={},types=[];
-  sorted.forEach(function(f){if(f.type&&!seen[f.type]){seen[f.type]=true;types.push(f.type);}});
-  var el=document.getElementById('ac-scroll');
-  if(!types.length){el.innerHTML='';return;}
+  var seen={},types=[];sorted.forEach(function(f){if(f.type&&!seen[f.type]){seen[f.type]=true;types.push(f.type);}});
+  var el=document.getElementById('ac-scroll');if(!types.length){el.innerHTML='';return;}
   el.innerHTML=types.map(function(t){
     var tf=sorted.filter(function(f){return f.type===t;});
     var last=tf[0],l=tf.reduce(function(s,f){return s+ldgs(f);},0),reg=last&&last.reg||'',daysAgo=last?Math.round((new Date()-new Date(last.date))/864e5):'-';
     var key=reg+'|'+t,cached=photoCache[key],pid='ph_'+key.replace(/[^a-z0-9]/gi,'_');
     var imgHtml=cached?'<img class="ac-thumb" src="'+cached+'">':(key in photoCache?'<div class="ac-placeholder"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>':'<div class="ac-placeholder ac-loading" id="'+pid+'"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>');
     if(!(key in photoCache)){(function(r,tp,id){getPhoto(r,tp).then(function(url){var e2=document.getElementById(id);if(!e2)return;if(url){var img=document.createElement('img');img.className='ac-thumb';img.src=url;e2.replaceWith(img);}else{e2.classList.remove('ac-loading');}});})(reg,t,pid);}
-    return '<div class="ac-card">'+imgHtml+'<div class="ac-info"><div class="ac-reg">'+(reg||t)+'</div><div class="ac-type">'+t+'</div><div class="ac-row"><span>'+fmt(sumF(tf,'block'))+'</span><span>'+l+' ldgs</span></div><div class="ac-row" style="margin-top:2px"><span style="color:var(--text3)">'+(last?last.from+'\u2192'+last.to:'')+'</span><span style="color:var(--text3)">'+daysAgo+'d ago</span></div></div></div>';
+    return'<div class="ac-card">'+imgHtml+'<div class="ac-info"><div class="ac-reg">'+(reg||t)+'</div><div class="ac-type">'+t+'</div><div class="ac-row"><span>'+fmt(sumF(tf,'block'))+'</span><span>'+l+' ldgs</span></div><div class="ac-row" style="margin-top:2px"><span style="color:var(--text3)">'+(last?last.from+'\u2192'+last.to:'')+'</span><span style="color:var(--text3)">'+daysAgo+'d</span></div></div></div>';
   }).join('');
 }
 
-function fnCard(label,val,sub){
-  return '<div style="background:var(--surface2);border-radius:12px;padding:18px 20px"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">'+label+'</div><div style="font-size:30px;font-weight:300;letter-spacing:-1.5px;margin-bottom:8px">'+fmt(val)+'</div><div style="font-size:11px;color:var(--text3)">'+sub+'</div></div>';
-}
+function fnCard(label,val,sub){return'<div style="background:var(--surface2);border-radius:12px;padding:14px 16px"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">'+label+'</div><div style="font-size:26px;font-weight:300;letter-spacing:-1px;margin-bottom:6px">'+fmt(val)+'</div><div style="font-size:11px;color:var(--text3)">'+sub+'</div></div>';}
 
 function renderTotals(){
   var tf=tfF();
@@ -504,27 +585,12 @@ function renderTotals(){
   var flCount=tf.filter(function(f){return parseFloat(f.block)>0;}).length;
   var simCount=tf.filter(function(f){return parseFloat(f.simHrs)>0;}).length;
   var sicDL=0,sicNL=0,sicN=0,picusDL=0,picusNL=0,picusN=0,picDL=0,picNL=0,picN=0;
-  tf.forEach(function(f){
-    var dl=parseInt(f.dayLdg)||0,nl=parseInt(f.nightLdg)||0;
-    if(parseFloat(f.sic)>0){sicDL+=dl;sicNL+=nl;sicN++;}
-    if(parseFloat(f.picus)>0){picusDL+=dl;picusNL+=nl;picusN++;}
-    if(parseFloat(f.pic)>0){picDL+=dl;picNL+=nl;picN++;}
-  });
+  tf.forEach(function(f){var dl=parseInt(f.dayLdg)||0,nl=parseInt(f.nightLdg)||0;if(parseFloat(f.sic)>0){sicDL+=dl;sicNL+=nl;sicN++;}if(parseFloat(f.picus)>0){picusDL+=dl;picusNL+=nl;picusN++;}if(parseFloat(f.pic)>0){picDL+=dl;picNL+=nl;picN++;}});
   var dualF=tf.filter(function(f){return parseFloat(f.block)>0&&parseFloat(f.pic)<=0&&parseFloat(f.sic)<=0&&parseFloat(f.picus)<=0;});
   var dualH=sumF(dualF,'block'),dualDL=dualF.reduce(function(s,f){return s+(parseInt(f.dayLdg)||0);},0),dualNL=dualF.reduce(function(s,f){return s+(parseInt(f.nightLdg)||0);},0);
   var grid=document.getElementById('totals-fn-grid');
-  if(grid){
-    grid.innerHTML=
-      fnCard('Total block time',totalBlock,'&#9728;&#65039; '+dayLdgTotal+' &#127769; '+nightLdgTotal+' #'+flCount)+
-      fnCard('Second in command',totalSic,'&#9728;&#65039; '+sicDL+' &#127769; '+sicNL+' #'+sicN)+
-      fnCard('PIC under supervision',totalPicus,'&#9728;&#65039; '+picusDL+' &#127769; '+picusNL+' #'+picusN)+
-      '<div style="background:var(--surface2);border-radius:12px;padding:18px 20px"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Simulator</div><div style="font-size:30px;font-weight:300;letter-spacing:-1.5px;margin-bottom:8px">'+fmt(totalSim)+'</div><div style="font-size:11px;color:var(--text3)">#'+simCount+'</div></div>'+
-      fnCard('Dual',dualH,'&#9728;&#65039; '+dualDL+' &#127769; '+dualNL+' #'+dualF.length)+
-      fnCard('Pilot in command',totalPic,'&#9728;&#65039; '+picDL+' &#127769; '+picNL+' #'+picN)+
-      '<div style="background:var(--surface2);border-radius:12px;padding:18px 20px"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Duty</div><div style="font-size:30px;font-weight:300;letter-spacing:-1.5px;margin-bottom:8px">0:00</div><div style="font-size:11px;color:var(--text3)">&nbsp;</div></div>';
-  }
-  var types=[],seen={};
-  flights.forEach(function(f){if(f.type&&!seen[f.type]){seen[f.type]=true;types.push(f.type);}});
+  if(grid){grid.innerHTML=fnCard('Total block time',totalBlock,'\u2600\ufe0f '+dayLdgTotal+' \ud83c\udf19 '+nightLdgTotal+' #'+flCount)+fnCard('Second in command',totalSic,'\u2600\ufe0f '+sicDL+' \ud83c\udf19 '+sicNL+' #'+sicN)+fnCard('PIC under supervision',totalPicus,'\u2600\ufe0f '+picusDL+' \ud83c\udf19 '+picusNL+' #'+picusN)+'<div style="background:var(--surface2);border-radius:12px;padding:14px 16px"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">Simulator</div><div style="font-size:26px;font-weight:300;letter-spacing:-1px;margin-bottom:6px">'+fmt(totalSim)+'</div><div style="font-size:11px;color:var(--text3)">#'+simCount+'</div></div>'+fnCard('Dual',dualH,'\u2600\ufe0f '+dualDL+' \ud83c\udf19 '+dualNL+' #'+dualF.length)+fnCard('Pilot in command',totalPic,'\u2600\ufe0f '+picDL+' \ud83c\udf19 '+picNL+' #'+picN)+'<div style="background:var(--surface2);border-radius:12px;padding:14px 16px"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">Duty</div><div style="font-size:26px;font-weight:300;letter-spacing:-1px;margin-bottom:6px">0:00</div><div style="font-size:11px;color:var(--text3)">&nbsp;</div></div>';}
+  var types=[],seen={};flights.forEach(function(f){if(f.type&&!seen[f.type]){seen[f.type]=true;types.push(f.type);}});
   ['totals-body','totals-body2'].forEach(function(id){
     var tb=document.getElementById(id);if(!tb)return;
     if(!types.length){tb.innerHTML='<tr><td colspan="10" class="empty">No flights logged.</td></tr>';return;}
@@ -535,18 +601,12 @@ function renderTotals(){
       var l=tfl.reduce(function(s,f){return s+ldgs(f);},0);
       var bl=sumF(tfl,'block'),pi=sumF(tfl,'pic'),pc=sumF(tfl,'picus'),si=sumF(tfl,'sic'),ni=sumF(tfl,'nightHrs'),ir=sumF(tfl,'ifrHrs'),sm=sumF(tfl,'simHrs');
       tot.block+=bl;tot.pic+=pi;tot.picus+=pc;tot.sic+=si;tot.nightHrs+=ni;tot.ifrHrs+=ir;tot.simHrs+=sm;tot.fl+=tfl.length;tot.ld+=l;
-      return '<tr><td>&#9658; '+t+'</td><td>'+fmt(bl)+'</td><td>#'+tfl.length+'/'+l+'</td><td>'+fmt(pi)+'</td><td>'+fmt(pc)+'</td><td>'+fmt(si)+'</td><td>'+fmt(ni)+'</td><td>'+fmt(ir)+'</td><td>'+fmt(sm)+'</td><td style="font-size:10px;color:var(--text3)">'+(last?last.from+'\u2192'+last.to:'-')+'</td></tr>';
+      return'<tr><td>'+t+'</td><td>'+fmt(bl)+'</td><td>#'+tfl.length+'/'+l+'</td><td>'+fmt(pi)+'</td><td>'+fmt(pc)+'</td><td>'+fmt(si)+'</td><td>'+fmt(ni)+'</td><td>'+fmt(ir)+'</td><td>'+fmt(sm)+'</td><td style="font-size:10px;color:var(--text3)">'+(last?last.from+'\u2192'+last.to:'-')+'</td></tr>';
     }).join('')+'<tr><td>Total</td><td>'+fmt(tot.block)+'</td><td>#'+tot.fl+'/'+tot.ld+'</td><td>'+fmt(tot.pic)+'</td><td>'+fmt(tot.picus)+'</td><td>'+fmt(tot.sic)+'</td><td>'+fmt(tot.nightHrs)+'</td><td>'+fmt(tot.ifrHrs)+'</td><td>'+fmt(tot.simHrs)+'</td><td></td></tr>';
   });
 }
 
-function populateTypeFilter(){
-  var types=[],seen={};
-  flights.forEach(function(f){if(f.type&&!seen[f.type]){seen[f.type]=true;types.push(f.type);}});
-  types.sort();
-  var sel=document.getElementById('filterType'),cur=sel.value;
-  sel.innerHTML='<option value="">All types</option>'+types.map(function(t){return '<option value="'+t+'"'+(t===cur?' selected':'')+'>'+t+'</option>';}).join('');
-}
+function populateTypeFilter(){var types=[],seen={};flights.forEach(function(f){if(f.type&&!seen[f.type]){seen[f.type]=true;types.push(f.type);}});types.sort();var sel=document.getElementById('filterType'),cur=sel.value;sel.innerHTML='<option value="">All types</option>'+types.map(function(t){return'<option value="'+t+'"'+(t===cur?' selected':'')+'>'+t+'</option>';}).join('');}
 
 function renderLogbook(){
   var q=(document.getElementById('search').value||'').toLowerCase(),ft=document.getElementById('filterType').value;
@@ -556,9 +616,7 @@ function renderLogbook(){
   var tb=document.getElementById('logbook-body'),em=document.getElementById('logbook-empty');
   if(!list.length){tb.innerHTML='';em.style.display='';document.getElementById('logbook-count').textContent='';return;}
   em.style.display='none';
-  tb.innerHTML=list.map(function(f){
-    return '<tr><td>'+f.date+'</td><td><span class="badge">'+(f.type||'-')+'</span></td><td style="color:var(--text2)">'+(f.reg||'-')+'</td><td><strong>'+(f.from||'-')+'</strong></td><td><strong>'+(f.to||'-')+'</strong></td><td>'+fmt(f.block)+'</td><td>'+fmt(f.pic)+'</td><td>'+fmt(f.nightHrs)+'</td><td>'+fmt(f.ifrHrs)+'</td><td>'+(f.dayLdg||0)+'</td><td>'+(f.nightLdg||0)+'</td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;color:var(--text3)">'+(f.remarks||'')+'</td><td style="white-space:nowrap"><button class="btn" style="padding:2px 7px;font-size:10px;height:24px" onclick="openModal(\''+f.id+'\')">Edit</button><button class="btn danger" style="padding:2px 7px;font-size:10px;height:24px;margin-left:3px" onclick="deleteFlight(\''+f.id+'\')">Del</button></td></tr>';
-  }).join('');
+  tb.innerHTML=list.map(function(f){return'<tr><td>'+f.date+'</td><td><span class="badge">'+(f.type||'-')+'</span></td><td>'+(f.reg||'-')+'</td><td><strong>'+(f.from||'-')+'</strong></td><td><strong>'+(f.to||'-')+'</strong></td><td>'+fmt(f.block)+'</td><td>'+fmt(f.pic)+'</td><td>'+fmt(f.nightHrs)+'</td><td>'+fmt(f.ifrHrs)+'</td><td>'+ldgs(f)+'</td><td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;color:var(--text3)">'+(f.remarks||'')+'</td><td style="white-space:nowrap"><button class="btn" style="padding:2px 7px;font-size:10px;height:24px" onclick="openModal(\''+f.id+'\')">Edit</button><button class="btn danger" style="padding:2px 7px;font-size:10px;height:24px;margin-left:3px" onclick="deleteFlight(\''+f.id+'\')">Del</button></td></tr>';}).join('');
   document.getElementById('logbook-count').textContent=list.length+' of '+flights.length+' flights';
 }
 
@@ -568,28 +626,28 @@ function renderOvChart(){
   var now=new Date(),months=[],hours=[];
   for(var i=11;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.toLocaleString('default',{month:'short'}));hours.push(flights.filter(function(f){var fd=new Date(f.date);return fd.getFullYear()===d.getFullYear()&&fd.getMonth()===d.getMonth();}).reduce(function(s,f){return s+(parseFloat(f.block)||0);},0));}
   if(chartOvMonthly)chartOvMonthly.destroy();
-  chartOvMonthly=new Chart(document.getElementById('chartMonthly'),{type:'bar',data:{labels:months,datasets:[{data:hours,backgroundColor:accent+'66',borderColor:accent,borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(v){return '  '+fmt(v.raw);}}}},scales:{y:{beginAtZero:true,ticks:{color:tick,callback:function(v){return fmt(v);}},grid:{color:grid}},x:{ticks:{color:tick},grid:{display:false}}}}});
+  chartOvMonthly=new Chart(document.getElementById('chartMonthly'),{type:'bar',data:{labels:months,datasets:[{data:hours,backgroundColor:accent+'66',borderColor:accent,borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(v){return'  '+fmt(v.raw);}}}},scales:{y:{beginAtZero:true,ticks:{color:tick,callback:function(v){return fmt(v);}},grid:{color:grid}},x:{ticks:{color:tick},grid:{display:false}}}}});
 }
 
-function icaoCountry(icao){if(!icao||icao.length<2)return null;var u=icao.toUpperCase();var map={'EG':'United Kingdom','ED':'Germany','ET':'Germany','LE':'Spain','GC':'Spain','LF':'France','LI':'Italy','LG':'Greece','EH':'Netherlands','EB':'Belgium','LP':'Portugal','EK':'Denmark','EN':'Norway','ES':'Sweden','EF':'Finland','LO':'Austria','LK':'Czech Republic','EP':'Poland','LH':'Hungary','LD':'Croatia','GM':'Morocco','HE':'Egypt','RJ':'Japan','OE':'Saudi Arabia'};var two=u.substring(0,2);if(map[two])return map[two];if(u[0]==='K')return'USA';if(u[0]==='C')return'Canada';if(u[0]==='Y')return'Australia';return'Other';}
+function icaoCountry(icao){if(!icao||icao.length<2)return null;var u=icao.toUpperCase();var map={'EG':'UK','ED':'Germany','ET':'Germany','LE':'Spain','GC':'Spain','LF':'France','LI':'Italy','LG':'Greece','EH':'Netherlands','EB':'Belgium','LP':'Portugal','EK':'Denmark','EN':'Norway','ES':'Sweden','EF':'Finland','LO':'Austria','LK':'Czech Rep','EP':'Poland','LH':'Hungary','LD':'Croatia','GM':'Morocco','HE':'Egypt','RJ':'Japan','OE':'Saudi Arabia'};var two=u.substring(0,2);if(map[two])return map[two];if(u[0]==='K')return'USA';if(u[0]==='C')return'Canada';if(u[0]==='Y')return'Australia';return'Other';}
 function classEng(t){if(!t)return'Unknown';var u=t.toUpperCase().replace(/[-\s]/g,'');if(/^(SIM|FFS|FTD|FNPT|AATD)/.test(u))return'Simulator';if(/^(A3|A2|A1|B7|B6|B5|B4|E17|E19|CRJ|ERJ|BCS)/.test(u))return'Jet';if(/^(ATR|AT7|PC12|C208|DH8|Q4|TBM)/.test(u))return'Turboprop';return'Piston';}
-function hbars(id,items,vFn){var el=document.getElementById(id);if(!items.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">No data.</div>';return;}var mx=Math.max.apply(null,items.map(function(x){return x.v;}));el.innerHTML=items.slice(0,8).map(function(x){var pct=mx>0?Math.round(x.v/mx*100):0;return '<div class="hbar-row"><span class="hbar-label">'+x.label+'</span><div class="hbar-track"><div class="hbar-fill" style="width:'+pct+'%"></div><span class="hbar-val">'+vFn(x.v)+'</span></div></div>';}).join('');}
-function donut(cid,lid,labels,data,colors){var ch=Chart.getChart(cid);if(ch)ch.destroy();new Chart(document.getElementById(cid),{type:'doughnut',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(v){return ' '+v.label+': '+fmt(v.raw);}}}}}});document.getElementById(lid).innerHTML=labels.map(function(l,i){return '<div class="donut-legend-item"><div class="donut-legend-dot" style="background:'+colors[i]+'"></div><span>'+l+': '+fmt(data[i])+'</span></div>';}).join('');}
+function hbars(id,items,vFn){var el=document.getElementById(id);if(!items.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">No data.</div>';return;}var mx=Math.max.apply(null,items.map(function(x){return x.v;}));el.innerHTML=items.slice(0,8).map(function(x){var pct=mx>0?Math.round(x.v/mx*100):0;return'<div class="hbar-row"><span class="hbar-label">'+x.label+'</span><div class="hbar-track"><div class="hbar-fill" style="width:'+pct+'%"></div><span class="hbar-val">'+vFn(x.v)+'</span></div></div>';}).join('');}
+function donut(cid,lid,labels,data,colors){var ch=Chart.getChart(cid);if(ch)ch.destroy();new Chart(document.getElementById(cid),{type:'doughnut',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(v){return' '+v.label+': '+fmt(v.raw);}}}}}});document.getElementById(lid).innerHTML=labels.map(function(l,i){return'<div class="donut-legend-item"><div class="donut-legend-dot" style="background:'+colors[i]+'"></div><span>'+l+': '+fmt(data[i])+'</span></div>';}).join('');}
 
 function renderAnalytics(){
   var tf=tfF(),accent=getAccent();
   var dark=document.documentElement.dataset.theme==='dark',tick=dark?'#555':'#999',grid=dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';
   if(!tf.length){['an-type','an-landings','an-reg','an-airports','an-countries','engine-legend','role-legend'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='<div style="font-size:12px;color:var(--text3)">No data.</div>';});return;}
   var tM={};tf.forEach(function(f){if(f.type)tM[f.type]=(tM[f.type]||0)+(parseFloat(f.block)||0);});
-  hbars('an-type',Object.entries(tM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return {label:x[0],v:x[1]};}),function(v){return fmt(v);});
+  hbars('an-type',Object.entries(tM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{label:x[0],v:x[1]};}),function(v){return fmt(v);});
   var lM={};tf.forEach(function(f){if(f.to){var l=ldgs(f);if(l>0)lM[f.to]=(lM[f.to]||0)+l;}});
-  hbars('an-landings',Object.entries(lM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return {label:x[0],v:x[1]};}),function(v){return String(v);});
+  hbars('an-landings',Object.entries(lM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{label:x[0],v:x[1]};}),function(v){return String(v);});
   var rM={};tf.forEach(function(f){if(f.reg)rM[f.reg]=(rM[f.reg]||0)+(parseFloat(f.block)||0);});
-  hbars('an-reg',Object.entries(rM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return {label:x[0],v:x[1]};}),function(v){return fmt(v);});
+  hbars('an-reg',Object.entries(rM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{label:x[0],v:x[1]};}),function(v){return fmt(v);});
   var aM={};tf.forEach(function(f){if(f.from)aM[f.from]=(aM[f.from]||0)+1;if(f.to)aM[f.to]=(aM[f.to]||0)+1;});
-  hbars('an-airports',Object.entries(aM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return {label:x[0],v:x[1]};}),function(v){return String(v);});
+  hbars('an-airports',Object.entries(aM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{label:x[0],v:x[1]};}),function(v){return String(v);});
   var cM={};tf.forEach(function(f){[f.from,f.to].forEach(function(ap){var c=icaoCountry(ap);if(c)cM[c]=(cM[c]||0)+1;});});
-  hbars('an-countries',Object.entries(cM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return {label:x[0],v:x[1]};}),function(v){return String(v);});
+  hbars('an-countries',Object.entries(cM).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{label:x[0],v:x[1]};}),function(v){return String(v);});
   var eM={};tf.forEach(function(f){var e=classEng(f.type);eM[e]=(eM[e]||0)+(parseFloat(f.block)||0);});
   var eE=Object.entries(eM).filter(function(x){return x[1]>0;});
   donut('chartEngine','engine-legend',eE.map(function(e){return e[0];}),eE.map(function(e){return e[1];}),['#fbbf24','#60a5fa','#2dd4bf','#a855f7','#fb7185'].slice(0,eE.length));
@@ -604,10 +662,10 @@ function renderAnalytics(){
   var now=new Date(),aMs=[],aHs=[];
   for(var i=23;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth()-i,1);aMs.push(d.toLocaleString('default',{month:'short',year:'2-digit'}));aHs.push(tf.filter(function(f){var fd=new Date(f.date);return fd.getFullYear()===d.getFullYear()&&fd.getMonth()===d.getMonth();}).reduce(function(s,f){return s+(parseFloat(f.block)||0);},0));}
   if(chartAnMonthly)chartAnMonthly.destroy();
-  chartAnMonthly=new Chart(document.getElementById('chartAnMonthly'),{type:'bar',data:{labels:aMs,datasets:[{data:aHs,backgroundColor:accent+'66',borderColor:accent,borderWidth:0,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(v){return '  '+fmt(v.raw);}}}},scales:{y:{beginAtZero:true,ticks:{color:tick,callback:function(v){return fmt(v);}},grid:{color:grid}},x:{ticks:{color:tick,maxRotation:45,autoSkip:true},grid:{display:false}}}}});
+  chartAnMonthly=new Chart(document.getElementById('chartAnMonthly'),{type:'bar',data:{labels:aMs,datasets:[{data:aHs,backgroundColor:accent+'66',borderColor:accent,borderWidth:0,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(v){return'  '+fmt(v.raw);}}}},scales:{y:{beginAtZero:true,ticks:{color:tick,callback:function(v){return fmt(v);}},grid:{color:grid}},x:{ticks:{color:tick,maxRotation:45,autoSkip:true},grid:{display:false}}}}});
   var sorted=[].concat(tf).sort(function(a,b){return new Date(a.date)-new Date(b.date);}),cum=0;
   if(chartCumulative)chartCumulative.destroy();
-  chartCumulative=new Chart(document.getElementById('chartCumulative'),{type:'line',data:{labels:sorted.map(function(f){return f.date;}),datasets:[{data:sorted.map(function(f){cum+=(parseFloat(f.block)||0);return parseFloat(cum.toFixed(2));}),borderColor:accent,backgroundColor:accent+'18',fill:true,tension:.3,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(v){return '  '+fmt(v.raw);}}}},scales:{y:{beginAtZero:true,ticks:{color:tick,callback:function(v){return fmt(v);}},grid:{color:grid}},x:{ticks:{color:tick,maxTicksLimit:12,maxRotation:45},grid:{display:false}}}}});
+  chartCumulative=new Chart(document.getElementById('chartCumulative'),{type:'line',data:{labels:sorted.map(function(f){return f.date;}),datasets:[{data:sorted.map(function(f){cum+=(parseFloat(f.block)||0);return parseFloat(cum.toFixed(2));}),borderColor:accent,backgroundColor:accent+'18',fill:true,tension:.3,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(v){return'  '+fmt(v.raw);}}}},scales:{y:{beginAtZero:true,ticks:{color:tick,callback:function(v){return fmt(v);}},grid:{color:grid}},x:{ticks:{color:tick,maxTicksLimit:12,maxRotation:45},grid:{display:false}}}}});
 }
 
 function openModal(id){
@@ -628,35 +686,12 @@ function saveFlight(){
   persist();closeModal();renderAll();
 }
 
-function switchTab(t){
-  document.getElementById('tab-btn-export').classList.toggle('active',t==='export');
-  document.getElementById('tab-btn-import').classList.toggle('active',t==='import');
-  document.getElementById('tab-export').style.display=t==='export'?'':'none';
-  document.getElementById('tab-import').style.display=t==='import'?'':'none';
-}
-function exportCSV(){
-  var h='date,aircraft_type,registration,from,to,block_time,pic_time,picus_time,sic_time,day_hours,night_hours,ifr_hours,day_landings,night_landings,remarks';
-  var rows=flights.map(function(f){return [f.date,f.type,f.reg,f.from,f.to,f.block,f.pic,f.picus,f.sic,f.dayHrs,f.nightHrs,f.ifrHrs,f.dayLdg,f.nightLdg,'"'+(f.remarks||'').replace(/"/g,'""')+'"'].join(',');});
-  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h].concat(rows).join('\n'));a.download='mylogbook_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-}
-function exportPrint(){
-  var rows=[].concat(flights).sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-  var win=window.open('','_blank');
-  win.document.write('<html><head><title>myLogbook</title><style>body{font-family:Arial,sans-serif;font-size:10px;padding:16px}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#eee;padding:4px 6px;text-align:left;font-size:9px;text-transform:uppercase}td{padding:3px 6px;border-bottom:0.5px solid #ddd}</style></head><body><h1 style="font-size:16px">myLogbook</h1><p style="color:#666;font-size:10px">'+new Date().toLocaleDateString()+' | '+flights.length+' flights | '+fmt(sumF(flights,'block'))+' total</p><table><thead><tr><th>Date</th><th>Type</th><th>Reg</th><th>From</th><th>To</th><th>Block</th><th>PIC</th><th>Night</th><th>IFR</th><th>Ldgs</th><th>Remarks</th></tr></thead><tbody>'+rows.map(function(f){return '<tr><td>'+f.date+'</td><td>'+(f.type||'')+'</td><td>'+(f.reg||'')+'</td><td>'+(f.from||'')+'</td><td>'+(f.to||'')+'</td><td>'+fmt(f.block)+'</td><td>'+fmt(f.pic)+'</td><td>'+fmt(f.nightHrs)+'</td><td>'+fmt(f.ifrHrs)+'</td><td>'+ldgs(f)+'</td><td>'+(f.remarks||'')+'</td></tr>';}).join('')+'</tbody></table></body></html>');
-  win.document.close();win.print();
-}
+function switchTab(t){document.getElementById('tab-btn-export').classList.toggle('active',t==='export');document.getElementById('tab-btn-import').classList.toggle('active',t==='import');document.getElementById('tab-export').style.display=t==='export'?'':'none';document.getElementById('tab-import').style.display=t==='import'?'':'none';}
 
-function parseCSVLine(line){
-  var res=[],cur='',inQ=false;
-  for(var i=0;i<line.length;i++){
-    var ch=line[i];
-    if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}
-    else if(ch===','&&!inQ){res.push(cur.trim());cur='';}
-    else{cur+=ch;}
-  }
-  res.push(cur.trim());
-  return res;
-}
+function exportCSV(){var h='date,aircraft_type,registration,from,to,block_time,pic_time,picus_time,sic_time,day_hours,night_hours,ifr_hours,day_landings,night_landings,remarks';var rows=flights.map(function(f){return[f.date,f.type,f.reg,f.from,f.to,f.block,f.pic,f.picus,f.sic,f.dayHrs,f.nightHrs,f.ifrHrs,f.dayLdg,f.nightLdg,'"'+(f.remarks||'').replace(/"/g,'""')+'"'].join(',');});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h].concat(rows).join('\n'));a.download='mylogbook_'+new Date().toISOString().slice(0,10)+'.csv';a.click();}
+function exportPrint(){var rows=[].concat(flights).sort(function(a,b){return new Date(a.date)-new Date(b.date);});var win=window.open('','_blank');win.document.write('<html><head><title>myLogbook</title><style>body{font-family:Arial,sans-serif;font-size:10px;padding:16px}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#eee;padding:4px 6px;text-align:left;font-size:9px;text-transform:uppercase}td{padding:3px 6px;border-bottom:0.5px solid #ddd}</style></head><body><h1 style="font-size:16px">myLogbook</h1><p style="color:#666;font-size:10px">'+new Date().toLocaleDateString()+' | '+flights.length+' flights | '+fmt(sumF(flights,'block'))+' total</p><table><thead><tr><th>Date</th><th>Type</th><th>Reg</th><th>From</th><th>To</th><th>Block</th><th>PIC</th><th>Night</th><th>IFR</th><th>Ldgs</th><th>Remarks</th></tr></thead><tbody>'+rows.map(function(f){return'<tr><td>'+f.date+'</td><td>'+(f.type||'')+'</td><td>'+(f.reg||'')+'</td><td>'+(f.from||'')+'</td><td>'+(f.to||'')+'</td><td>'+fmt(f.block)+'</td><td>'+fmt(f.pic)+'</td><td>'+fmt(f.nightHrs)+'</td><td>'+fmt(f.ifrHrs)+'</td><td>'+ldgs(f)+'</td><td>'+(f.remarks||'')+'</td></tr>';}).join('')+'</tbody></table></body></html>');win.document.close();win.print();}
+
+function parseCSVLine(line){var res=[],cur='',inQ=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}else if(ch===','&&!inQ){res.push(cur.trim());cur='';}else{cur+=ch;}}res.push(cur.trim());return res;}
 function hm2d(v){if(!v||v==='0'||v==='')return 0;v=String(v).trim();if(v.indexOf(':')>=0){var p=v.split(':');return(parseInt(p[0])||0)+(parseInt(p[1])||0)/60;}return parseFloat(v)||0;}
 
 function handleImport(e){
@@ -680,29 +715,20 @@ function handleImport(e){
           blockStartVal=c[idx('time_block_start')]?c[idx('time_block_start')].trim():'';
           bDec=blockRaw>0?blockRaw:0;
           simHrsVal=simRaw>0?simRaw:0;
-          pic=hm2d(c[idx('duration_pic')]);
-          picus=hm2d(c[idx('duration_picus')]);
-          sic=hm2d(c[idx('duration_sic')]);
-          nightHrs=hm2d(c[idx('duration_night')]);
-          ifrHrs=hm2d(c[idx('duration_ifr')]);
+          pic=hm2d(c[idx('duration_pic')]);picus=hm2d(c[idx('duration_picus')]);sic=hm2d(c[idx('duration_sic')]);
+          nightHrs=hm2d(c[idx('duration_night')]);ifrHrs=hm2d(c[idx('duration_ifr')]);
           dayHrs=Math.max(0,bDec-nightHrs);
           dayLdg=c[idx('ldgs_day')]?c[idx('ldgs_day')].trim():'0';
           nightLdg=c[idx('ldgs_night')]?c[idx('ldgs_night')].trim():'0';
-          if(blockRaw<=0&&simRaw>0){
-            var st=c[idx('simulator_type')]?c[idx('simulator_type')].trim():'';
-            var at=c[idx('aircraft_type')]?c[idx('aircraft_type')].trim():'';
-            type=(st||at||'SIM').toUpperCase();
-          }else{
-            type=c[idx('aircraft_type')]?c[idx('aircraft_type')].trim().toUpperCase():'';
-          }
+          if(blockRaw<=0&&simRaw>0){var st=c[idx('simulator_type')]?c[idx('simulator_type')].trim():'';var at=c[idx('aircraft_type')]?c[idx('aircraft_type')].trim():'';type=(st||at||'SIM').toUpperCase();}
+          else{type=c[idx('aircraft_type')]?c[idx('aircraft_type')].trim().toUpperCase():'';}
           reg=c[idx('aircraft_registration')]?c[idx('aircraft_registration')].trim().toUpperCase():'';
           from=c[idx('departure_airport')]?c[idx('departure_airport')].trim().toUpperCase():'';
           to=c[idx('arrival_airport')]?c[idx('arrival_airport')].trim().toUpperCase():'';
           remarks=String(c[idx('remarks')]||c[idx('personal_note')]||'').trim();
         }else{
           date=c[idx('date')]?c[idx('date')].trim():'';
-          bDec=hm2d(c[idx('block_time')]);
-          simHrsVal=0;blockStartVal='';
+          bDec=hm2d(c[idx('block_time')]);simHrsVal=0;blockStartVal='';
           pic=hm2d(c[idx('pic_time')]);picus=hm2d(c[idx('picus_time')]);sic=hm2d(c[idx('sic_time')]);
           nightHrs=hm2d(c[idx('night_hours')]);ifrHrs=hm2d(c[idx('ifr_hours')]);dayHrs=hm2d(c[idx('day_hours')]);
           dayLdg=c[idx('day_landings')]?c[idx('day_landings')].trim():'0';
@@ -718,22 +744,19 @@ function handleImport(e){
         var isDupe;
         if(blockStartVal){isDupe=flights.some(function(f){return f.date===date&&f.reg===reg&&f.blockStart===blockStartVal;});}
         else{isDupe=flights.some(function(f){return f.date===date&&f.reg===reg&&f.from===from&&f.to===to&&Math.abs(parseFloat(f.block)-bDec)<0.02;});}
-        if(isDupe){dupes++;reasons.push('Duplicate: '+date+' '+reg+' '+from+'->'+to);return;}
+        if(isDupe){dupes++;reasons.push('Duplicate: '+date+' '+reg);return;}
         flights.push({id:Date.now().toString()+Math.random(),date:date,type:type,reg:reg,from:from,to:to,blockStart:blockStartVal,block:bDec.toFixed(2),simHrs:simHrsVal.toFixed(2),pic:pic.toFixed(2),picus:picus.toFixed(2),sic:sic.toFixed(2),dayHrs:dayHrs.toFixed(2),nightHrs:nightHrs.toFixed(2),ifrHrs:ifrHrs.toFixed(2),dayLdg:dayLdg,nightLdg:nightLdg,remarks:remarks});
         added++;
       }catch(err){invalid++;reasons.push('Error: '+err.message);}
     });
     persist();renderAll();
-    var info=reasons.slice(0,10).map(function(r){return '<div style="font-size:10px;color:var(--text3);margin-top:2px">'+r+'</div>';}).join('');
-    document.getElementById('import-msg').innerHTML='<span style="color:var(--green)">Imported '+added+' flight'+(added!==1?'s':'')+'.</span>'+(dupes?' <span style="color:var(--amber)">'+dupes+' duplicate'+(dupes!==1?'s':'')+' skipped.</span>':'')+(invalid?' <span style="color:var(--red)">'+invalid+' invalid rows skipped.</span>':'')+info;
+    var info=reasons.slice(0,10).map(function(r){return'<div style="font-size:10px;color:var(--text3);margin-top:2px">'+r+'</div>';}).join('');
+    document.getElementById('import-msg').innerHTML='<span style="color:var(--green)">Imported '+added+' flight'+(added!==1?'s':'')+'.</span>'+(dupes?' <span style="color:var(--amber)">'+dupes+' duplicates skipped.</span>':'')+(invalid?' <span style="color:var(--red)">'+invalid+' invalid rows skipped.</span>':'')+info;
   };
   reader.readAsText(file);
 }
 
 document.getElementById('modal').addEventListener('click',function(e){if(e.target===document.getElementById('modal'))closeModal();});
-
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-
 loadFlights();
 </script>
 </body>
