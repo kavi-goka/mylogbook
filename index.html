@@ -27,10 +27,20 @@ body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min
 .menu-btn{width:36px;height:36px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .menu-btn svg{width:18px;height:18px;fill:var(--text2)}
 .app-body{display:flex;flex:1;overflow:hidden}
-.sidebar{width:220px;background:var(--surface);border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:transform .25s ease;position:fixed;top:54px;left:0;bottom:0;z-index:40;transform:translateX(-100%)}
-.sidebar.open{transform:translateX(0);box-shadow:4px 0 20px rgba(0,0,0,.5)}
+.sidebar{width:220px;background:var(--surface);border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:transform .25s ease}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px}
 .overlay{display:none;position:fixed;inset:0;top:54px;background:rgba(0,0,0,.5);z-index:39}
 .overlay.open{display:block}
+@media(max-width:680px){
+  .sidebar{position:fixed;top:54px;left:0;bottom:0;z-index:40;transform:translateX(-100%);width:240px}
+  .sidebar.open{transform:translateX(0);box-shadow:4px 0 20px rgba(0,0,0,.5)}
+  .content{padding:12px}
+}
+@media(min-width:681px){
+  .menu-btn{display:flex}
+  .sidebar{position:relative;transform:none}
+  .sidebar.open{transform:none;box-shadow:none}
+}
 .logo{padding:16px 16px 12px;display:flex;align-items:center;gap:9px;border-bottom:0.5px solid var(--border)}
 .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo-icon svg{width:17px;height:17px;fill:#fff}
@@ -514,12 +524,21 @@ document.getElementById('delete-all-btn').addEventListener('click',function(){
 });
 
 function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('open');
+  var sb=document.getElementById('sidebar');
+  var ov=document.getElementById('overlay');
+  if(window.innerWidth<=680){
+    sb.classList.toggle('open');
+    ov.classList.toggle('open');
+  } else {
+    if(sb.style.display==='none'){sb.style.display='';}
+    else{sb.style.display='none';}
+  }
 }
 function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
+  if(window.innerWidth<=680){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
 }
 
 function setTheme(t,silent){
